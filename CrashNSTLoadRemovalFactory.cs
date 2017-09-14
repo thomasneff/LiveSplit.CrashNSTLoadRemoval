@@ -33,7 +33,7 @@ namespace LiveSplit.PokemonRedBlue
         {
             get { return ComponentName; }
         }
-		public string UpdateURL => "https://raw.githubusercontent.com/thomasneff/LiveSplit.PokemonRB/master/";
+		public string UpdateURL => "https://raw.githubusercontent.com/thomasneff/LiveSplit.CrashNSTLoadRemoval/master/";
 		public string XMLURL => UpdateURL + "update.LiveSplit.CrashNSTLoadRemoval.xml";
 		
 
