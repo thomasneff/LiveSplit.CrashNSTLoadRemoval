@@ -21,6 +21,8 @@ If you do full trilogy run, you'll still need to time your title screen loads. S
 # Settings
 The LiveSplit.CrashNSTLoadRemoval.dll goes into your "Components" folder in your LiveSplit folder.
 
+Add this to LiveSplit by going into your Layout Editor -> Add -> Control -> CrashNSTLoadRemoval.
+
 You can specify to capture either the full primary Display (default) or an open window. This window has to be open (not minimized) but does not have to be in the foreground.
 
 This might not work for windows with DirectX/OpenGL surfaces, nothing I can do about that. (Use Display capture for those cases, sorry). In those cases, you will probably get a black image in the capture preview in the component settings.
