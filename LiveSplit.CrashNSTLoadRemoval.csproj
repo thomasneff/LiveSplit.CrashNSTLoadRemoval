@@ -63,6 +63,9 @@
     </Compile>
     <Compile Include="CrashNSTLoadRemovalComponent.cs" />
     <Compile Include="CrashNSTLoadRemovalFactory.cs" />
+    <Compile Include="DLLImportStuff.cs" />
+    <Compile Include="FeatureDetector.cs" />
+    <Compile Include="ImageCapture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

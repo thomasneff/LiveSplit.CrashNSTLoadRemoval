@@ -2,12 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using CrashNSaneLoadDetector;
+
 namespace LiveSplit.UI.Components
 {
     class CrashNSTLoadRemovalComponent : IComponent
     {
-        //public ComponentSettings Settings { get; set; }
-
         public string ComponentName
         {
             get { return "Crash NST Load Removal"; }
@@ -23,26 +23,44 @@ namespace LiveSplit.UI.Components
         public bool Refresh { get; set; }
 
         public IDictionary<string, Action> ContextMenuControls { get; protected set; }
-
-  
-        protected SimpleLabel Label1 = new SimpleLabel();
+		
 		public CrashNSTLoadRemovalSettings settings { get; set; }
 
-		protected string InfoStringPokemon { get; set; }
-        protected string InfoStringEncounter { get; set; }
-        public CrashNSTLoadRemovalComponent()
-        {
+		private bool isLoading = false;
+		private int matchingBins = 0;
+
+		private TimerModel timer;
+
+
+		public CrashNSTLoadRemovalComponent(LiveSplitState state)
+		{
 			settings = new CrashNSTLoadRemovalSettings();
-            Label1 = new SimpleLabel();
-            Cache = new GraphicsCache();
+
+			timer = new TimerModel { CurrentState = state };
+			timer.CurrentState.OnStart += timer_OnStart;
+
 
 		}
 
-   
-        public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
+		void timer_OnStart(object sender, EventArgs e)
+		{
+			timer.InitializeGameTime();
+		}
+
+
+		public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-           
-        }
+			//Capture image using the settings defined for the component
+			Bitmap capture = settings.CaptureImage();
+
+			//Feed the image to the feature detection
+			var features = FeatureDetector.featuresFromBitmap(capture);
+			isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out matchingBins, false);
+
+			timer.CurrentState.IsGameTimePaused = isLoading;
+			//timer.CurrentState.IsGameTimePaused = true;
+
+		}
 
         public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
         {        
@@ -95,6 +113,7 @@ namespace LiveSplit.UI.Components
 
         public void Dispose()
         {
-        }
+			timer.CurrentState.OnStart -= timer_OnStart;
+		}
     }
 }

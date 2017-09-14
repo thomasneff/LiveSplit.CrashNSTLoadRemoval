@@ -26,7 +26,7 @@ namespace LiveSplit.PokemonRedBlue
 
         public IComponent Create(LiveSplitState state)
         {
-            return new CrashNSTLoadRemovalComponent();
+            return new CrashNSTLoadRemovalComponent(state);
         }
 
         public string UpdateName
