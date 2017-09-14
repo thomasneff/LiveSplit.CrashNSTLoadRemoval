@@ -41,6 +41,9 @@ namespace CrashNSaneLoadDetector
 		[DllImport("user32.dll")]
 		public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
+		[DllImport("gdi32.dll")]
+		public static extern bool DeleteDC(IntPtr hDC);
+
 		[DllImport("user32.dll")]
 		public static extern bool GetClientRect(IntPtr hWnd, out Rectangle lpRect);
 

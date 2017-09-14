@@ -157,33 +157,46 @@ namespace CrashNSaneLoadDetector
 
 		public static Bitmap PrintWindow(IntPtr hwnd, ref ImageCaptureInfo info)
 		{
-			Rectangle rc;
-			DLLImportStuff.GetClientRect(hwnd, out rc);
+			try
+			{
 
-			if (rc.Width < 0)
-				return new Bitmap(1, 1);
+			
+				Rectangle rc;
+				DLLImportStuff.GetClientRect(hwnd, out rc);
 
-			IntPtr hdcwnd = DLLImportStuff.GetDC(hwnd);
-			IntPtr hdc = DLLImportStuff.CreateCompatibleDC(hdcwnd);
+				Bitmap ret = new Bitmap(1, 1);
 
-			//Compute crop coordinates and width/ height based on resoution
-			ImageCapture.SizeAdjustedCropAndOffset(rc.Width, rc.Height, ref info);
+				if (rc.Width < 0)
+					return ret;
 
+				IntPtr hdcwnd = DLLImportStuff.GetDC(hwnd);
+				IntPtr hdc = DLLImportStuff.CreateCompatibleDC(hdcwnd);
 
-			IntPtr hbmp = DLLImportStuff.CreateCompatibleBitmap(hdcwnd, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y);
-
-			DLLImportStuff.SelectObject(hdc, hbmp);
-
-			DLLImportStuff.BitBlt(hdc, 0, 0, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y, hdcwnd, (int)(info.center_of_frame_x + info.actual_offset_x - info.actual_crop_size_x / 2),
-				(int)(info.center_of_frame_y + info.actual_offset_y - info.actual_crop_size_y / 2), DLLImportStuff.TernaryRasterOperations.SRCCOPY);
+				//Compute crop coordinates and width/ height based on resoution
+				ImageCapture.SizeAdjustedCropAndOffset(rc.Width, rc.Height, ref info);
 
 
-			DLLImportStuff.DeleteObject(hbmp);
-			DLLImportStuff.ReleaseDC(hwnd, hdcwnd);
+				IntPtr hbmp = DLLImportStuff.CreateCompatibleBitmap(hdcwnd, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y);
 
+				DLLImportStuff.SelectObject(hdc, hbmp);
 
-			Bitmap a = Image.FromHbitmap(hbmp);
-			return ResizeImage((Bitmap)a.Clone(), info.captureSizeX, info.captureSizeY);
+				DLLImportStuff.BitBlt(hdc, 0, 0, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y, hdcwnd, (int)(info.center_of_frame_x + info.actual_offset_x - info.actual_crop_size_x / 2),
+					(int)(info.center_of_frame_y + info.actual_offset_y - info.actual_crop_size_y / 2), DLLImportStuff.TernaryRasterOperations.SRCCOPY);
+
+			
+				ret = (Bitmap) Image.FromHbitmap(hbmp).Clone();		
+
+				DLLImportStuff.DeleteObject(hbmp);
+				DLLImportStuff.ReleaseDC(hwnd, hdcwnd);
+				DLLImportStuff.DeleteDC(hdc);
+
+				return ResizeImage(ret, info.captureSizeX, info.captureSizeY);
+			}
+			catch (System.Runtime.InteropServices.ExternalException ex)
+			{
+				
+				return new Bitmap(10, 10);
+			}
 		}
 
 	}

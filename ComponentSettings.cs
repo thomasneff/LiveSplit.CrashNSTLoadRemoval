@@ -12,7 +12,8 @@ namespace LiveSplit.UI.Components
     public partial class CrashNSTLoadRemovalSettings : UserControl {
 
 		//-1 -> full screen, otherwise index process list
-        int captureIndex = -1;
+        private int captureIndex = -1;
+		private int numScreens = 1;
 		Process[] processList;
 		ImageCaptureInfo imageCaptureInfo;
 		private Size captureSize = new Size(300, 100);
@@ -36,7 +37,10 @@ namespace LiveSplit.UI.Components
 			imageCaptureInfo.cropOffsetX = cropOffsetX;
 			imageCaptureInfo.cropOffsetY = cropOffsetY;
 			imageCaptureInfo.captureAspectRatio = captureAspectRatioX / captureAspectRatioY;
+
+			
 		}
+
 
 		public CrashNSTLoadRemovalSettings() {
             InitializeComponent();
@@ -48,13 +52,19 @@ namespace LiveSplit.UI.Components
 			Process[] processListtmp = Process.GetProcesses();
 			List<Process> processes_with_name = new List<Process>();
 			processListComboBox.Items.Clear();
-			processListComboBox.Items.Add("Full Display (Primary)");
+			numScreens = 0;
+			foreach (var screen in Screen.AllScreens)
+			{
+				// For each screen, add the screen properties to a list box.
+				processListComboBox.Items.Add("Screen: " + screen.DeviceName + ", " + screen.Bounds.ToString());
+				numScreens++;
+			}
 			foreach (Process process in processListtmp)
 			{
 				if (!String.IsNullOrEmpty(process.MainWindowTitle))
 				{
 					Console.WriteLine("Process: {0} ID: {1} Window title: {2} HWND PTR {3}", process.ProcessName, process.Id, process.MainWindowTitle, process.MainWindowHandle);
-					processListComboBox.Items.Add(process.MainWindowTitle);
+					processListComboBox.Items.Add(process.ProcessName + ": " + process.MainWindowTitle);
 					processes_with_name.Add(process);
 				}
 
@@ -117,19 +127,29 @@ namespace LiveSplit.UI.Components
 			Bitmap b = new Bitmap(1, 1);
 
 			//Full screen capture
-			if (captureIndex == -1)
+			if (captureIndex < 0)
 			{
-				Rectangle screenRect = Screen.GetBounds(new Point(0, 0));
+				Screen selected_screen = Screen.AllScreens[-captureIndex - 1];
+				Rectangle screenRect = selected_screen.Bounds;
 
 				Point screenCenter = new Point(screenRect.Width / 2, screenRect.Height / 2);
 
 				//Compute crop coordinates and width/ height based on resoution
 				ImageCapture.SizeAdjustedCropAndOffset(screenRect.Width, screenRect.Height, ref imageCaptureInfo);
+
+				//Adjust for selected screen offset
+				imageCaptureInfo.center_of_frame_x += selected_screen.Bounds.X;
+				imageCaptureInfo.center_of_frame_x += selected_screen.Bounds.Y;
+
 				b = ImageCapture.CaptureFromDisplay(ref imageCaptureInfo);
 			}
 			else
 			{
 				IntPtr handle = new IntPtr(0);
+
+				if (captureIndex >= processList.Length)
+					return b;
+
 				if (captureIndex != -1)
 				{
 					handle = processList[captureIndex].MainWindowHandle;
@@ -148,7 +168,7 @@ namespace LiveSplit.UI.Components
 
 		private void comboBox1_SelectedIndexChanged(object sender, EventArgs e) {
 
-			captureIndex = processListComboBox.SelectedIndex - 1;
+			captureIndex = processListComboBox.SelectedIndex - numScreens;
 
 			imageCaptureInfo.captureSizeX = previewPictureBox.Width;
 			imageCaptureInfo.captureSizeY = previewPictureBox.Height;
@@ -177,13 +197,20 @@ namespace LiveSplit.UI.Components
 			Process[] processListtmp = Process.GetProcesses();
 			List<Process> processes_with_name = new List<Process>();
 			processListComboBox.Items.Clear();
-			processListComboBox.Items.Add("Full Display (Primary)");
+
+			numScreens = 0;
+			foreach (var screen in Screen.AllScreens)
+			{
+				// For each screen, add the screen properties to a list box.
+				processListComboBox.Items.Add("Screen: " + screen.DeviceName + ", " + screen.Bounds.ToString());
+				numScreens++;
+			}
 			foreach (Process process in processListtmp)
 			{
 				if (!String.IsNullOrEmpty(process.MainWindowTitle))
 				{
 					Console.WriteLine("Process: {0} ID: {1} Window title: {2} HWND PTR {3}", process.ProcessName, process.Id, process.MainWindowTitle, process.MainWindowHandle);
-					processListComboBox.Items.Add(process.MainWindowTitle);
+					processListComboBox.Items.Add(process.ProcessName + ": " + process.MainWindowTitle);
 					processes_with_name.Add(process);
 				}
 
