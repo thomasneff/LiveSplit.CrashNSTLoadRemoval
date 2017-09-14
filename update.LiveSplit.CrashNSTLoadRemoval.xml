@@ -1,0 +1,10 @@
+<updates>
+  <update version="1.0">
+    <files>
+      <file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+    </files>
+    <changelog>
+      <change>Basically make everything work</change>
+    </changelog>
+  </update>
+</updates>

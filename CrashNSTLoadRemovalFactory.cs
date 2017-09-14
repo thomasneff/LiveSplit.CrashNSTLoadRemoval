@@ -33,22 +33,9 @@ namespace LiveSplit.PokemonRedBlue
         {
             get { return ComponentName; }
         }
-
-        public string XMLURL
-        {
-#if RELEASE_CANDIDATE
-#else
-            get { return "http://livesplit.org/update/Components/update.LiveSplit.OcarinaOfTime.xml"; }
-#endif
-        }
-
-        public string UpdateURL
-        {
-#if RELEASE_CANDIDATE
-#else
-            get { return "http://livesplit.org/update/"; }
-#endif
-        }
+		public string UpdateURL => "https://raw.githubusercontent.com/thomasneff/LiveSplit.PokemonRB/master/";
+		public string XMLURL => UpdateURL + "update.LiveSplit.CrashNSTLoadRemoval.xml";
+		
 
         public Version Version
         {
