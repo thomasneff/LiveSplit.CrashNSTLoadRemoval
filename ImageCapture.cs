@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CrashNSaneLoadDetector
 {
-	struct ImageCaptureInfo
+	public struct ImageCaptureInfo
 	{
 		public float featureVectorResolutionX;
 		public float featureVectorResolutionY;
