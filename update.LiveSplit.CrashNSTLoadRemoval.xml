@@ -1,4 +1,12 @@
 <updates>
+  <update version="1.1">
+    <files>
+      <file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+    </files>
+    <changelog>
+      <change>Fixed tons of bugs, added region selection/cropping to preview in settings.</change>
+    </changelog>
+  </update>
   <update version="1.0">
     <files>
       <file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />

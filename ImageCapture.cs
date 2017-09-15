@@ -24,6 +24,10 @@ namespace CrashNSaneLoadDetector
 		public float actual_offset_y;
 		public float actual_crop_size_x;
 		public float actual_crop_size_y;
+		public float crop_coordinate_left;
+		public float crop_coordinate_right;
+		public float crop_coordinate_top;
+		public float crop_coordinate_bottom;
 	}
 
 
@@ -124,7 +128,7 @@ namespace CrashNSaneLoadDetector
 			using (Graphics g = Graphics.FromImage(b))
 			{
 				g.CopyFromScreen((int)(info.center_of_frame_x - info.actual_crop_size_x / 2 + info.actual_offset_x),
-					(int)(info.center_of_frame_y - info.actual_crop_size_y / 2 + info.actual_offset_y), 0, 0, new Size((int)info.actual_crop_size_x, (int)info.actual_crop_size_y), CopyPixelOperation.SourceCopy);
+				(int)(info.center_of_frame_y - info.actual_crop_size_y / 2 + info.actual_offset_y), 0, 0, new Size((int)info.actual_crop_size_x, (int)info.actual_crop_size_y), CopyPixelOperation.SourceCopy);
 			}
 
 			b = ResizeImage(b, info.captureSizeX, info.captureSizeY);
@@ -155,7 +159,8 @@ namespace CrashNSaneLoadDetector
 			return result;
 		}
 
-		public static Bitmap PrintWindow(IntPtr hwnd, ref ImageCaptureInfo info)
+
+		public static Bitmap PrintWindow(IntPtr hwnd, ref ImageCaptureInfo info, bool full = false, bool useCrop = false)
 		{
 			try
 			{
@@ -172,8 +177,45 @@ namespace CrashNSaneLoadDetector
 				IntPtr hdcwnd = DLLImportStuff.GetDC(hwnd);
 				IntPtr hdc = DLLImportStuff.CreateCompatibleDC(hdcwnd);
 
+
+
+				
+
+				if(useCrop)
+				{
+					//Change size according to selected crop
+					rc.Width = (int)(info.crop_coordinate_right - info.crop_coordinate_left);
+					rc.Height = (int)(info.crop_coordinate_bottom - info.crop_coordinate_top);
+				}
+				
+
+				
+
 				//Compute crop coordinates and width/ height based on resoution
 				ImageCapture.SizeAdjustedCropAndOffset(rc.Width, rc.Height, ref info);
+
+
+				
+				
+
+				float cropOffsetX = info.actual_offset_x;
+				float cropOffsetY = info.actual_offset_y;
+
+				if(full)
+				{
+					info.actual_offset_x = 0;
+					info.actual_offset_y = 0;
+
+					info.actual_crop_size_x = 2 * info.center_of_frame_x;
+					info.actual_crop_size_y = 2 * info.center_of_frame_y;
+				}
+
+				if (useCrop)
+				{
+					//Adjust for crop offset
+					info.center_of_frame_x += info.crop_coordinate_left;
+					info.center_of_frame_y += info.crop_coordinate_top;
+				}
 
 
 				IntPtr hbmp = DLLImportStuff.CreateCompatibleBitmap(hdcwnd, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y);
@@ -183,7 +225,12 @@ namespace CrashNSaneLoadDetector
 				DLLImportStuff.BitBlt(hdc, 0, 0, (int)info.actual_crop_size_x, (int)info.actual_crop_size_y, hdcwnd, (int)(info.center_of_frame_x + info.actual_offset_x - info.actual_crop_size_x / 2),
 					(int)(info.center_of_frame_y + info.actual_offset_y - info.actual_crop_size_y / 2), DLLImportStuff.TernaryRasterOperations.SRCCOPY);
 
-			
+
+
+				info.actual_offset_x = cropOffsetX;
+				info.actual_offset_y = cropOffsetY;
+
+
 				ret = (Bitmap) Image.FromHbitmap(hbmp).Clone();		
 
 				DLLImportStuff.DeleteObject(hbmp);
