@@ -1,4 +1,13 @@
 <updates>
+	<update version="1.4">
+		<files>
+			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Added ability to select custom scale for Windows DPI Scaling issues.
+			This will allow you to change the capture scale if you have scaling enabled on Windows.</change>
+		</changelog>
+	</update>
 	<update version="1.3">
 		<files>
 			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />

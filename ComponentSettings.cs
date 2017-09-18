@@ -34,6 +34,9 @@ namespace LiveSplit.UI.Components
 		private bool drawingPreview = false;
 		private Bitmap previewImage = null;
 
+		private int scalingValue = 100;
+		private float scalingValueFloat = 1.0f;
+
 		private void initImageCaptureInfo()
 		{
 			imageCaptureInfo = new ImageCaptureInfo();
@@ -145,6 +148,9 @@ namespace LiveSplit.UI.Components
 				Screen selected_screen = Screen.AllScreens[-processCaptureIndex - 1];
 				Rectangle screenRect = selected_screen.Bounds;
 
+				screenRect.Width = (int)(screenRect.Width * scalingValueFloat);
+				screenRect.Height = (int)(screenRect.Height * scalingValueFloat);
+
 				Point screenCenter = new Point(screenRect.Width / 2, screenRect.Height / 2);
 
 
@@ -201,7 +207,11 @@ namespace LiveSplit.UI.Components
 				Screen selected_screen = Screen.AllScreens[-processCaptureIndex - 1];
 				Rectangle screenRect = selected_screen.Bounds;
 
-				Point screenCenter = new Point(screenRect.Width / 2, screenRect.Height / 2);
+				screenRect.Width = (int)(screenRect.Width * scalingValueFloat);
+				screenRect.Height = (int)(screenRect.Height * scalingValueFloat);
+
+
+				Point screenCenter = new Point((int)(screenRect.Width / 2.0f), (int)(screenRect.Height / 2.0f));
 
 				if (useCrop)
 				{
@@ -258,7 +268,7 @@ namespace LiveSplit.UI.Components
 
 
 
-				b = ImageCapture.PrintWindow(handle, ref imageCaptureInfo, full: true, useCrop: useCrop);
+				b = ImageCapture.PrintWindow(handle, ref imageCaptureInfo, full: true, useCrop: useCrop, scalingValueFloat: scalingValueFloat);
 			}
 
 
@@ -267,7 +277,14 @@ namespace LiveSplit.UI.Components
 
 		private void comboBox1_SelectedIndexChanged(object sender, EventArgs e) {
 
-			processCaptureIndex = processListComboBox.SelectedIndex - numScreens;
+			if(processListComboBox.SelectedIndex < numScreens)
+			{
+				processCaptureIndex = -processListComboBox.SelectedIndex - 1;
+			}
+			else
+			{
+				processCaptureIndex = processListComboBox.SelectedIndex - numScreens;
+			}
 
 			selectionTopLeft = new Point(0, 0);
 			selectionBottomRight = new Point(previewPictureBox.Width, previewPictureBox.Height);
@@ -298,6 +315,7 @@ namespace LiveSplit.UI.Components
 			processListComboBox.Items.Clear();
 
 			numScreens = 0;
+
 			foreach (var screen in Screen.AllScreens)
 			{
 				// For each screen, add the screen properties to a list box.
@@ -432,6 +450,23 @@ namespace LiveSplit.UI.Components
 			DrawPreview();
 		}
 
+		private void trackBar1_ValueChanged(object sender, EventArgs e)
+		{
+			scalingValue = trackBar1.Value;
 
+			if (scalingValue % trackBar1.SmallChange != 0)
+			{
+				scalingValue = (scalingValue / trackBar1.SmallChange) * trackBar1.SmallChange;
+
+				trackBar1.Value = scalingValue;
+
+			}
+
+			scalingValueFloat = ((float)scalingValue) / 100.0f;
+
+			scalingLabel.Text = "Scaling: " + trackBar1.Value.ToString() + "%";
+
+			DrawPreview();
+		}
 	}
 }

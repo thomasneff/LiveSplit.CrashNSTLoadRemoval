@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace CrashNSaneLoadDetector
 {
@@ -159,8 +160,28 @@ namespace CrashNSaneLoadDetector
 			return result;
 		}
 
+		public static SizeF GetCurrentDpiScale()
+		{
+			using (Form form = new Form())
+			using (Graphics g = form.CreateGraphics())
+			{
+				var dpi = new SizeF()
+				{
+					Width = g.DpiX,
+					Height = g.DpiY
+				};
+				// Calc the scale.
+				SizeF scale = new SizeF()
+				{
+					Width = dpi.Width / 96f,
+					Height = dpi.Height / 96f
+				};
 
-		public static Bitmap PrintWindow(IntPtr hwnd, ref ImageCaptureInfo info, bool full = false, bool useCrop = false)
+				return scale;
+			}
+		}
+
+		public static Bitmap PrintWindow(IntPtr hwnd, ref ImageCaptureInfo info, bool full = false, bool useCrop = false, float scalingValueFloat = 1.0f)
 		{
 			try
 			{
@@ -177,11 +198,12 @@ namespace CrashNSaneLoadDetector
 				IntPtr hdcwnd = DLLImportStuff.GetDC(hwnd);
 				IntPtr hdc = DLLImportStuff.CreateCompatibleDC(hdcwnd);
 
+				rc.Width = (int)(rc.Width * scalingValueFloat);
+				rc.Height = (int)(rc.Height * scalingValueFloat);
 
 
-				
 
-				if(useCrop)
+				if (useCrop)
 				{
 					//Change size according to selected crop
 					rc.Width = (int)(info.crop_coordinate_right - info.crop_coordinate_left);
