@@ -31,6 +31,9 @@ namespace LiveSplit.UI.Components
 		private Point selectionTopLeft = new Point(0, 0);
 		private Point selectionBottomRight = new Point(0, 0);
 
+		private bool drawingPreview = false;
+		private Bitmap previewImage = null;
+
 		private void initImageCaptureInfo()
 		{
 			imageCaptureInfo = new ImageCaptureInfo();
@@ -276,62 +279,6 @@ namespace LiveSplit.UI.Components
 		}
 
 
-		private void DrawPreview()
-		{
-
-
-			ImageCaptureInfo copy = imageCaptureInfo;
-			copy.captureSizeX = previewPictureBox.Width;
-			copy.captureSizeY = previewPictureBox.Height;
-
-			//Show something in the preview
-			Bitmap capture_image = CaptureImageFullPreview(ref copy);
-			float crop_size_x = copy.actual_crop_size_x;
-			float crop_size_y = copy.actual_crop_size_y;
-
-
-			//Draw selection rectangle
-			using (Graphics g = Graphics.FromImage(capture_image))
-			{
-				Pen drawing_pen = new Pen(Color.Magenta, 8.0f);
-				drawing_pen.Alignment = PenAlignment.Inset;
-				g.DrawRectangle(drawing_pen, selectionRectanglePreviewBox);
-
-			}
-
-			previewPictureBox.Image = capture_image;
-
-
-
-
-			//Compute image crop coordinates according to selection rectangle
-
-			//Get raw image size from imageCaptureInfo.actual_crop_size to compute scaling between raw and rectangle coordinates
-
-			//Console.WriteLine("SIZE X: {0}, SIZE Y: {1}", imageCaptureInfo.actual_crop_size_x, imageCaptureInfo.actual_crop_size_y);
-
-			imageCaptureInfo.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
-			imageCaptureInfo.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
-			imageCaptureInfo.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
-			imageCaptureInfo.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
-
-			copy.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
-			copy.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
-			copy.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
-			copy.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
-
-
-
-			croppedPreviewPictureBox.Image = CaptureImageFullPreview(ref copy, useCrop: true);
-
-
-			copy.captureSizeX = captureSize.Width;
-			copy.captureSizeY = captureSize.Height;
-
-
-		}
-
-
 
 		private void checkedListBox1_ItemCheck(object sender, ItemCheckEventArgs e) {
            
@@ -371,21 +318,120 @@ namespace LiveSplit.UI.Components
 			processList = processes_with_name.ToArray();
 		}
 
-		private void previewPictureBox_MouseClick(object sender, MouseEventArgs e)
+		private void DrawCaptureRectangleBitmap()
 		{
-			if (e.Button == MouseButtons.Left
-				&& (selectionRectanglePreviewBox.Left + selectionRectanglePreviewBox.Width) - e.Location.X > 0
-				&& (selectionRectanglePreviewBox.Top + selectionRectanglePreviewBox.Height) - e.Location.Y > 0)
+			Bitmap capture_image = (Bitmap)previewImage.Clone();
+			//Draw selection rectangle
+			using (Graphics g = Graphics.FromImage(capture_image))
 			{
-				selectionTopLeft = e.Location;
+				Pen drawing_pen = new Pen(Color.Magenta, 8.0f);
+				drawing_pen.Alignment = PenAlignment.Inset;
+				g.DrawRectangle(drawing_pen, selectionRectanglePreviewBox);
+
 			}
-			else if (e.Button == MouseButtons.Right && e.Location.X - selectionRectanglePreviewBox.Left > 0 && e.Location.Y - selectionRectanglePreviewBox.Top > 0)
+
+			previewPictureBox.Image = capture_image;
+		}
+
+		private void DrawPreview()
+		{
+
+
+			ImageCaptureInfo copy = imageCaptureInfo;
+			copy.captureSizeX = previewPictureBox.Width;
+			copy.captureSizeY = previewPictureBox.Height;
+
+			//Show something in the preview
+			previewImage = CaptureImageFullPreview(ref copy);
+			float crop_size_x = copy.actual_crop_size_x;
+			float crop_size_y = copy.actual_crop_size_y;
+
+
+			//Draw selection rectangle
+			DrawCaptureRectangleBitmap();
+
+
+
+
+			//Compute image crop coordinates according to selection rectangle
+
+			//Get raw image size from imageCaptureInfo.actual_crop_size to compute scaling between raw and rectangle coordinates
+
+			//Console.WriteLine("SIZE X: {0}, SIZE Y: {1}", imageCaptureInfo.actual_crop_size_x, imageCaptureInfo.actual_crop_size_y);
+
+			imageCaptureInfo.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
+			imageCaptureInfo.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
+			imageCaptureInfo.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
+			imageCaptureInfo.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
+
+			copy.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
+			copy.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
+			copy.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
+			copy.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
+
+
+
+			croppedPreviewPictureBox.Image = CaptureImageFullPreview(ref copy, useCrop: true);
+
+
+			copy.captureSizeX = captureSize.Width;
+			copy.captureSizeY = captureSize.Height;
+
+
+		}
+
+		private void SetRectangleFromMouse(MouseEventArgs e)
+		{
+			//Clamp values to pictureBox range
+			int x = Math.Min(Math.Max(0, e.Location.X), previewPictureBox.Width);
+			int y = Math.Min(Math.Max(0, e.Location.Y), previewPictureBox.Height);
+
+			if (e.Button == MouseButtons.Left
+				&& (selectionRectanglePreviewBox.Left + selectionRectanglePreviewBox.Width) - x > 0
+				&& (selectionRectanglePreviewBox.Top + selectionRectanglePreviewBox.Height) - y > 0)
 			{
-				selectionBottomRight = e.Location;
+				selectionTopLeft = new Point(x, y);
+			}
+			else if (e.Button == MouseButtons.Right && x - selectionRectanglePreviewBox.Left > 0 && y - selectionRectanglePreviewBox.Top > 0)
+			{
+				selectionBottomRight = new Point(x, y);
 			}
 
 			selectionRectanglePreviewBox = new Rectangle(selectionTopLeft.X, selectionTopLeft.Y, selectionBottomRight.X - selectionTopLeft.X, selectionBottomRight.Y - selectionTopLeft.Y);
+
+
+		}
+
+		private void previewPictureBox_MouseClick(object sender, MouseEventArgs e)
+		{
+
+		}
+
+		private void previewPictureBox_MouseMove(object sender, MouseEventArgs e)
+		{
+			SetRectangleFromMouse(e);
+			if (drawingPreview == false)
+			{
+				drawingPreview = true;
+				//Draw selection rectangle
+				DrawCaptureRectangleBitmap();
+				drawingPreview = false;
+			}
+
+		}
+
+		private void previewPictureBox_MouseUp(object sender, MouseEventArgs e)
+		{
+			SetRectangleFromMouse(e);
 			DrawPreview();
 		}
+
+		private void previewPictureBox_MouseDown(object sender, MouseEventArgs e)
+		{
+			SetRectangleFromMouse(e);
+			DrawPreview();
+		}
+
+
 	}
 }
