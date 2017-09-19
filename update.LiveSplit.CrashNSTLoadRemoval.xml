@@ -1,4 +1,14 @@
 <updates>
+	<update version="1.6">
+		<files>
+			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Added more data for streched aspect ratio + aku during loading.
+			</change>
+		</changelog>
+	</update>
 	<update version="1.5">
 		<files>
 			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
