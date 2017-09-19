@@ -7,6 +7,8 @@ using System.Diagnostics;
 using CrashNSaneLoadDetector;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
+using System.Drawing.Imaging;
 
 namespace LiveSplit.UI.Components
 {
@@ -37,6 +39,14 @@ namespace LiveSplit.UI.Components
 		private int scalingValue = 100;
 		private float scalingValueFloat = 1.0f;
 
+		private List<int> lastFeatures = null;
+		private Bitmap lastDiagnosticCapture = null;
+		private Bitmap lastFullCapture = null;
+		private Bitmap lastFullCroppedCapture = null;
+		private int lastMatchingBins = 0;
+		private string DiagnosticsFolderName = "CrashNSTDiagnostics/";
+		private int numCaptures = 0;
+
 		private void initImageCaptureInfo()
 		{
 			imageCaptureInfo = new ImageCaptureInfo();
@@ -44,7 +54,7 @@ namespace LiveSplit.UI.Components
 			selectionTopLeft = new Point(0, 0);
 			selectionBottomRight = new Point(previewPictureBox.Width, previewPictureBox.Height);
 			selectionRectanglePreviewBox = new Rectangle(selectionTopLeft.X, selectionTopLeft.Y, selectionBottomRight.X - selectionTopLeft.X, selectionBottomRight.Y - selectionTopLeft.Y);
-
+			requiredMatchesUpDown.Value = FeatureDetector.numberOfBinsCorrect;
 
 			imageCaptureInfo.featureVectorResolutionX = featureVectorResolutionX;
 			imageCaptureInfo.featureVectorResolutionY = featureVectorResolutionY;
@@ -136,7 +146,6 @@ namespace LiveSplit.UI.Components
         private void checkAutoReset_CheckedChanged(object sender, EventArgs e) {
           
         }
-
 
 		public Bitmap CaptureImage()
 		{
@@ -364,7 +373,7 @@ namespace LiveSplit.UI.Components
 			float crop_size_x = copy.actual_crop_size_x;
 			float crop_size_y = copy.actual_crop_size_y;
 
-
+			lastFullCapture = previewImage;
 			//Draw selection rectangle
 			DrawCaptureRectangleBitmap();
 
@@ -388,13 +397,25 @@ namespace LiveSplit.UI.Components
 			copy.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
 
 
-
-			croppedPreviewPictureBox.Image = CaptureImageFullPreview(ref copy, useCrop: true);
-
+			Bitmap full_cropped_capture = CaptureImageFullPreview(ref copy, useCrop: true);
+			croppedPreviewPictureBox.Image = full_cropped_capture;
+			lastFullCroppedCapture = full_cropped_capture;
 
 			copy.captureSizeX = captureSize.Width;
 			copy.captureSizeY = captureSize.Height;
 
+			//Show matching bins for preview
+			var capture = CaptureImage();
+			var features = FeatureDetector.featuresFromBitmap(capture);
+			int tempMatchingBins = 0;
+			var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out tempMatchingBins, false);
+
+
+			lastFeatures = features;
+			lastDiagnosticCapture = capture;
+			lastMatchingBins = tempMatchingBins;
+			matchDisplayLabel.Text = tempMatchingBins.ToString();
+			
 
 		}
 
@@ -467,6 +488,44 @@ namespace LiveSplit.UI.Components
 			scalingLabel.Text = "Scaling: " + trackBar1.Value.ToString() + "%";
 
 			DrawPreview();
+		}
+
+		private void requiredMatchesUpDown_ValueChanged(object sender, EventArgs e)
+		{
+			FeatureDetector.numberOfBinsCorrect = (int)requiredMatchesUpDown.Value;
+		}
+
+		private void updatePreviewButton_Click(object sender, EventArgs e)
+		{
+			DrawPreview();
+		}
+
+		private void saveFeatureVectorToTxt(List<int> featureVector, string filename, string directoryName)
+		{
+			System.IO.Directory.CreateDirectory(directoryName);
+			try
+			{
+				using (var file = File.CreateText(directoryName + "/" + filename))
+				{
+					file.Write("{");
+					file.Write(string.Join(",", featureVector));
+					file.Write("},\n");
+				}
+			}
+			catch
+			{
+				//yeah, silent catch is bad, I don't care
+			}
+		}
+
+		private void saveDiagnosticsButton_Click(object sender, EventArgs e)
+		{
+			System.IO.Directory.CreateDirectory(DiagnosticsFolderName);
+			numCaptures++;
+			lastFullCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_FULL_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			lastFullCroppedCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_FULL_CROPPED_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			lastDiagnosticCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_DIAGNOSTIC_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			saveFeatureVectorToTxt(lastFeatures, numCaptures.ToString() + "_FEATURES_" + lastMatchingBins + ".txt", DiagnosticsFolderName);
 		}
 	}
 }

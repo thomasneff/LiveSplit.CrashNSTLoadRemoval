@@ -15,7 +15,7 @@ namespace CrashNSaneLoadDetector
 		private static float varianceOfBinsAllowed = 0.2f;
 		private static int patchSizeX = 50;
 		private static int patchSizeY = 50;
-		private static int numberOfBinsCorrect = 520;
+		public static int numberOfBinsCorrect = 520;
 		private static int numberOfBins = 16;
 
 

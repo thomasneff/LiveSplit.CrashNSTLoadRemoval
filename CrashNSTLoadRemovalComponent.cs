@@ -55,7 +55,9 @@ namespace LiveSplit.UI.Components
 
 			//Feed the image to the feature detection
 			var features = FeatureDetector.featuresFromBitmap(capture);
-			isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out matchingBins, false);
+			int tempMatchingBins = 0;
+			isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out tempMatchingBins, false);
+			matchingBins = tempMatchingBins;
 
 			timer.CurrentState.IsGameTimePaused = isLoading;
 			//timer.CurrentState.IsGameTimePaused = true;
