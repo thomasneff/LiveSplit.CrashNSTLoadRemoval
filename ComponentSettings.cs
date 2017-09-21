@@ -520,12 +520,21 @@ namespace LiveSplit.UI.Components
 
 		private void saveDiagnosticsButton_Click(object sender, EventArgs e)
 		{
-			System.IO.Directory.CreateDirectory(DiagnosticsFolderName);
+			FolderBrowserDialog fbd = new FolderBrowserDialog();
+
+			var result = fbd.ShowDialog();
+
+			if (result != DialogResult.OK)
+			{
+				return;
+			}
+
+			//System.IO.Directory.CreateDirectory(fbd.SelectedPath);
 			numCaptures++;
-			lastFullCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_FULL_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			lastFullCroppedCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_FULL_CROPPED_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			lastDiagnosticCapture.Save(DiagnosticsFolderName + numCaptures.ToString() + "_DIAGNOSTIC_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			saveFeatureVectorToTxt(lastFeatures, numCaptures.ToString() + "_FEATURES_" + lastMatchingBins + ".txt", DiagnosticsFolderName);
+			lastFullCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			lastFullCroppedCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_CROPPED_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			lastDiagnosticCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_DIAGNOSTIC_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+			saveFeatureVectorToTxt(lastFeatures, numCaptures.ToString() + "_FEATURES_" + lastMatchingBins + ".txt", fbd.SelectedPath);
 		}
 	}
 }

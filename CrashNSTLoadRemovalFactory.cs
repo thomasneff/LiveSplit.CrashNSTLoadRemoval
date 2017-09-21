@@ -39,7 +39,7 @@ namespace LiveSplit.PokemonRedBlue
 
         public Version Version
         {
-            get { return Version.Parse("1.6"); }
+            get { return Version.Parse("1.7"); }
         }
     }
 }

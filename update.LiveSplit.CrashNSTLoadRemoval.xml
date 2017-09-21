@@ -1,4 +1,15 @@
 <updates>
+	<update version="1.7">
+		<files>
+			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Modified the detection algorithm to not OR all the feature vector bins, but to match at least 1 full vector.
+				The default value for "Matching" might be a little low - if it's detecting regular gameplay as loads, you might need to put it a little higher.
+			</change>
+		</changelog>
+	</update>
 	<update version="1.6">
 		<files>
 			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
