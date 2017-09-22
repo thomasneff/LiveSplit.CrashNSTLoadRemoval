@@ -1,4 +1,14 @@
 <updates>
+	<update version="1.8">
+		<files>
+			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Improved detection by a bit, added saving settings, added AutoSplitter. Make sure to always "Save Layout" so your AutoSplitter settings get saved!
+			</change>
+		</changelog>
+	</update>
 	<update version="1.7">
 		<files>
 			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
