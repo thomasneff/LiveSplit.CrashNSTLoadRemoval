@@ -32,7 +32,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>
     </DocumentationFile>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>Components\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CrashNSTLiveSplitDirectly|AnyCPU'">
     <OutputPath>..\..\..\..\..\LiveSplit\Components\</OutputPath>
@@ -68,6 +68,7 @@
     <Compile Include="CrashNSTLoadRemovalFactory.cs" />
     <Compile Include="DLLImportStuff.cs" />
     <Compile Include="FeatureDetector.cs" />
+    <Compile Include="HighResolutionTimer.cs" />
     <Compile Include="ImageCapture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

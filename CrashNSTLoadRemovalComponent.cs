@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using CrashNSaneLoadDetector;
+using System.Threading;
 
 namespace LiveSplit.UI.Components
 {
@@ -42,67 +43,129 @@ namespace LiveSplit.UI.Components
 		private int runningFrames = 0;
 		private int pausedFrames = 0;
 		private int numberOfPauses = 0;
+		private int pausedFramesSegment = 0;
 		private string GameName = "";
 		private string GameCategory = "";
+		private DateTime lastTime;
+		private DateTime segmentTimeStart;
+		private LiveSplitState liveSplitState;
+		private Thread captureThread;
+		private bool threadRunning = false;
+		private long captureDelay = 20;
+		private double framesSum = 0.0;
+		private int framesSumRounded = 0;
+		private int skippedPauses = 0;
+		
+		private HighResolutionTimer.HighResolutionTimer highResTimer;
+		private List<int> NumberOfLoadsPerSplit;
 
 		public CrashNSTLoadRemovalComponent(LiveSplitState state)
 		{
+
 			GameName = state.Run.GameName;
 			GameCategory = state.Run.CategoryName;
+			liveSplitState = state;
+			NumberOfLoadsPerSplit = new List<int>();
+			InitNumberOfLoadsFromState();
+			
 			settings = new CrashNSTLoadRemovalSettings(state);
-
+			lastTime = DateTime.Now;
+			segmentTimeStart = DateTime.Now;
 			timer = new TimerModel { CurrentState = state };
 			timer.CurrentState.OnStart += timer_OnStart;
 			timer.CurrentState.OnReset += timer_OnReset;
 			timer.CurrentState.OnSkipSplit += timer_OnSkipSplit;
+			timer.CurrentState.OnSplit += timer_OnSplit;
+			timer.CurrentState.OnUndoSplit += timer_OnUndoSplit;
+			timer.CurrentState.OnPause += timer_OnPause;
+			timer.CurrentState.OnResume += timer_OnResume;
+			highResTimer = new HighResolutionTimer.HighResolutionTimer(5.0f);
+			highResTimer.Elapsed += (s, e) => { CaptureLoads(); };
 		}
 
-		private void timer_OnSkipSplit(object sender, EventArgs e)
+		private void timer_OnResume(object sender, EventArgs e)
 		{
-			runningFrames = 0;
-			pausedFrames = 0;
-			numberOfPauses = 0;
+			timerStarted = true;
 		}
 
-		private void timer_OnReset(object sender, TimerPhase value)
+		private void timer_OnPause(object sender, EventArgs e)
 		{
 			timerStarted = false;
 		}
 
-		void timer_OnStart(object sender, EventArgs e)
+		private void InitNumberOfLoadsFromState()
 		{
-			timer.InitializeGameTime();
-			timerStarted = true;
-		}
+			NumberOfLoadsPerSplit = new List<int>();
+			NumberOfLoadsPerSplit.Clear();
 
-
-		public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
-        {
-
-			if(GameName != state.Run.GameName || GameCategory != state.Run.CategoryName)
+			if(liveSplitState == null)
 			{
-				//Reload settings for different game or category
-				GameName = state.Run.GameName;
-				GameCategory = state.Run.CategoryName;
-
-				settings.ChangeAutoSplitSettingsToGameName(GameName, GameCategory);
+				return;
 			}
 
+			foreach (var split in liveSplitState.Run)
+			{
+				NumberOfLoadsPerSplit.Add(0);
+			}
 
+			//Quicker way to prevent OOB on last split as I'm not sure if the index will go over if the run finishes
+			NumberOfLoadsPerSplit.Add(99999);
+		}
+
+		private int CumulativeNumberOfLoadsForSplitIndex(int splitIndex)
+		{
+			int numberOfLoads = 0;
+
+			for(int idx = 0; (idx < NumberOfLoadsPerSplit.Count && idx <= splitIndex) ; idx++)
+			{
+				numberOfLoads += NumberOfLoadsPerSplit[idx];
+			}
+			return numberOfLoads;
+		}
+
+		private void CaptureLoads()
+		{
 			if (timerStarted)
 			{
+				//Console.WriteLine("TIME NOW: {0}", DateTime.Now - lastTime);
+				//Console.WriteLine("TIME DIFF START: {0}", DateTime.Now - lastTime);
+				lastTime = DateTime.Now;
 				//Capture image using the settings defined for the component
 				Bitmap capture = settings.CaptureImage();
 
 				//Feed the image to the feature detection
 				var features = FeatureDetector.featuresFromBitmap(capture);
 				int tempMatchingBins = 0;
+				bool wasLoading = isLoading;
 				isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out tempMatchingBins, false);
 				matchingBins = tempMatchingBins;
 
 				timer.CurrentState.IsGameTimePaused = isLoading;
 
-				if(settings.AutoSplitterEnabled)
+				if (isLoading && !wasLoading)
+				{
+					segmentTimeStart = DateTime.Now;
+				}
+
+				if (isLoading)
+				{
+					pausedFramesSegment++; 
+				}
+
+				if (wasLoading && !isLoading)
+				{
+					TimeSpan delta = (DateTime.Now - segmentTimeStart);
+					framesSum += delta.TotalSeconds * 60.0f;
+					int framesRounded = Convert.ToInt32(delta.TotalSeconds * 60.0f);
+					framesSumRounded += framesRounded;
+					Console.WriteLine("SEGMENT FRAMES: {0}, fromTime (@60fps) {1}, timeDelta {2}, totalFrames {3}, fromTime(int) {4}, totalFrames(int) {5}",
+						pausedFramesSegment, delta.TotalSeconds,
+						delta.TotalSeconds * 60.0f, framesSum, framesRounded, framesSumRounded);
+					pausedFramesSegment = 0;
+				}
+
+
+				if (settings.AutoSplitterEnabled)
 				{
 					//This is just so that if the detection is not correct by a single frame, it still only splits if a few successive frames are loading
 					if (isLoading && NSTState == CrashNSTState.RUNNING)
@@ -122,12 +185,12 @@ namespace LiveSplit.UI.Components
 						pausedFrames = 0;
 						//We enter pause.
 						NSTState = CrashNSTState.LOADING;
-						numberOfPauses++;
+						NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex]++;
 
-						if (numberOfPauses >= settings.GetAutoSplitNumberOfLoadsForSplit(state.CurrentSplit.Name))
+						if (CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex) >= settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
 						{
 							timer.Split();
-							numberOfPauses = 0;
+							
 						}
 					}
 					else if (NSTState == CrashNSTState.LOADING && runningFrames >= settings.AutoSplitterJitterToleranceFrames)
@@ -139,7 +202,115 @@ namespace LiveSplit.UI.Components
 					}
 				}
 
+
+				//Console.WriteLine("TIME TAKEN FOR DETECTION: {0}", DateTime.Now - lastTime);
 			}
+		}
+
+		private void timer_OnUndoSplit(object sender, EventArgs e)
+		{
+			//skippedPauses -= settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex + 1].Name);
+			runningFrames = 0;
+			pausedFrames = 0;
+
+			//If we undo a split that already has met the required number of loads, we probably want the number to reset.
+			if(NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex] >= settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
+			{
+				NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex] = 0;
+			}
+
+			//Otherwise - we're fine. If it is a split that was skipped earlier, we still keep track of how we're standing.
+
+		}
+
+		private void timer_OnSplit(object sender, EventArgs e)
+		{
+			runningFrames = 0;
+			pausedFrames = 0;
+			numberOfPauses = 0;
+
+			//If we split, we add all remaining loads to the last split.
+			//This means that the autosplitter now starts at 0 loads on the next split.
+			//This is just necessary for manual splits, as automatic splits will always have a difference of 0.
+			var loadsRequiredTotal = settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex - 1].Name);
+			var loadsCurrentTotal = CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex - 1);
+			NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex - 1] += loadsRequiredTotal - loadsCurrentTotal;
+
+		}
+
+		private void timer_OnSkipSplit(object sender, EventArgs e)
+		{
+
+			skippedPauses += settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex - 1].Name);
+			runningFrames = 0;
+			pausedFrames = 0;
+			
+			//We don't need to do anything here - we just keep track of loads per split now.
+		}
+
+		private void timer_OnReset(object sender, TimerPhase value)
+		{
+			timerStarted = false;
+			runningFrames = 0;
+			pausedFrames = 0;
+			numberOfPauses = 0;
+			threadRunning = false;
+			highResTimer.Stop(joinThread:false);
+			InitNumberOfLoadsFromState();
+		}
+
+		void timer_OnStart(object sender, EventArgs e)
+		{
+			InitNumberOfLoadsFromState();
+			timer.InitializeGameTime();
+			runningFrames = 0;
+			pausedFrames = 0;
+			numberOfPauses = 0;
+			timerStarted = true;
+			threadRunning = true;
+			//StartCaptureThread();
+			//highResTimer.Start();
+		}
+
+		void StartCaptureThread()
+		{
+			captureThread = new Thread(() =>
+			{
+				System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+				while (threadRunning)
+				{
+					//watch.Restart();
+					CaptureLoads();
+					//TODO: test rounding of framecounts in output, more importantly:
+					//TEST FINAL TIME TO SEE IF IT IS ACCURATE WITH THIS,
+					//THEN ADD SLEEPS FOR PERFORMANCE
+					//THEN ADJUST FOR BETTER PERFORMANCE
+
+					/*Thread.Sleep(Math.Max((int)(captureDelay - watch.Elapsed.TotalMilliseconds - 1), 0));
+					while(captureDelay - watch.Elapsed.TotalMilliseconds >= 0)
+					{
+						;
+					}*/
+				}
+			});
+			captureThread.Start();
+		}
+
+
+		public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
+        {
+			liveSplitState = state;
+			if (GameName != state.Run.GameName || GameCategory != state.Run.CategoryName)
+			{
+				//Reload settings for different game or category
+				GameName = state.Run.GameName;
+				GameCategory = state.Run.CategoryName;
+
+				settings.ChangeAutoSplitSettingsToGameName(GameName, GameCategory);
+			}
+
+
+			CaptureLoads();
 
 
 		}

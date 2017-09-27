@@ -340,6 +340,20 @@ namespace LiveSplit.UI.Components
 				}
 			}
 		}
+		public int GetCumulativeNumberOfLoadsForSplit(string splitName)
+		{
+			int numberOfLoads = 0;
+			splitName = removeInvalidXMLCharacters(splitName);
+			foreach (AutoSplitEntry entry in autoSplitData.SplitData)
+			{
+				numberOfLoads += entry.NumberOfLoads;
+				if (entry.SplitName == splitName)
+				{
+					return numberOfLoads;
+				}
+			}
+			return numberOfLoads;
+		}
 
 		public int GetAutoSplitNumberOfLoadsForSplit(string splitName)
 		{
