@@ -12,7 +12,7 @@
 	</update>
 	<update version="1.8">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>
@@ -22,7 +22,7 @@
 	</update>
 	<update version="1.7">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>
@@ -33,7 +33,7 @@
 	</update>
 	<update version="1.6">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>
@@ -43,7 +43,7 @@
 	</update>
 	<update version="1.5">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>
@@ -53,7 +53,7 @@
 	</update>
 	<update version="1.4">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>Added ability to select custom scale for Windows DPI Scaling issues.
@@ -62,7 +62,7 @@
 	</update>
 	<update version="1.3">
 		<files>
-			<file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>More bugfixes, support mouse drag in preview.</change>
@@ -70,7 +70,7 @@
 	</update>
   <update version="1.1">
     <files>
-      <file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+      <file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
     </files>
     <changelog>
       <change>Fixed tons of bugs, added region selection/cropping to preview in settings.</change>
@@ -78,7 +78,7 @@
   </update>
   <update version="1.0">
     <files>
-      <file path="bin/Release/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+      <file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
     </files>
     <changelog>
       <change>Basically make everything work</change>
