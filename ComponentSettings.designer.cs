@@ -52,6 +52,7 @@
 			this.autoSplitNameLbl = new System.Windows.Forms.Label();
 			this.autoSplitCategoryLbl = new System.Windows.Forms.Label();
 			this.enableAutoSplitterChk = new System.Windows.Forms.CheckBox();
+			this.chkAutoSplitterDisableOnSkip = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.previewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.croppedPreviewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
@@ -289,6 +290,7 @@
 			// 
 			this.tabPage2.AutoScroll = true;
 			this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+			this.tabPage2.Controls.Add(this.chkAutoSplitterDisableOnSkip);
 			this.tabPage2.Controls.Add(this.label6);
 			this.tabPage2.Controls.Add(this.label3);
 			this.tabPage2.Controls.Add(this.autoSplitNameLbl);
@@ -356,6 +358,17 @@
 			this.enableAutoSplitterChk.UseVisualStyleBackColor = true;
 			this.enableAutoSplitterChk.CheckedChanged += new System.EventHandler(this.enableAutoSplitterChk_CheckedChanged);
 			// 
+			// chkAutoSplitterDisableOnSkip
+			// 
+			this.chkAutoSplitterDisableOnSkip.AutoSize = true;
+			this.chkAutoSplitterDisableOnSkip.Location = new System.Drawing.Point(150, 9);
+			this.chkAutoSplitterDisableOnSkip.Name = "chkAutoSplitterDisableOnSkip";
+			this.chkAutoSplitterDisableOnSkip.Size = new System.Drawing.Size(239, 17);
+			this.chkAutoSplitterDisableOnSkip.TabIndex = 43;
+			this.chkAutoSplitterDisableOnSkip.Text = "Disable AutoSplitter on Skip until manual Split";
+			this.chkAutoSplitterDisableOnSkip.UseVisualStyleBackColor = true;
+			this.chkAutoSplitterDisableOnSkip.CheckedChanged += new System.EventHandler(this.chkAutoSplitterDisableOnSkip_CheckedChanged);
+			// 
 			// CrashNSTLoadRemovalSettings
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -404,5 +417,6 @@
 		private System.Windows.Forms.Label autoSplitNameLbl;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.CheckBox chkAutoSplitterDisableOnSkip;
 	}
 }

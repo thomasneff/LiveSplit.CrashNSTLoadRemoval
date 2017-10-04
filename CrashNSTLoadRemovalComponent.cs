@@ -55,6 +55,7 @@ namespace LiveSplit.UI.Components
 		private double framesSum = 0.0;
 		private int framesSumRounded = 0;
 		private int skippedPauses = 0;
+		private bool LastSplitSkip = false;
 		
 		private HighResolutionTimer.HighResolutionTimer highResTimer;
 		private List<int> NumberOfLoadsPerSplit;
@@ -137,7 +138,7 @@ namespace LiveSplit.UI.Components
 				var features = FeatureDetector.featuresFromBitmap(capture);
 				int tempMatchingBins = 0;
 				bool wasLoading = isLoading;
-				isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out tempMatchingBins, false);
+				isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, false);
 				matchingBins = tempMatchingBins;
 
 				timer.CurrentState.IsGameTimePaused = isLoading;
@@ -165,7 +166,7 @@ namespace LiveSplit.UI.Components
 				}
 
 
-				if (settings.AutoSplitterEnabled)
+				if (settings.AutoSplitterEnabled && !(settings.AutoSplitterDisableOnSkipUntilSplit && LastSplitSkip))
 				{
 					//This is just so that if the detection is not correct by a single frame, it still only splits if a few successive frames are loading
 					if (isLoading && NSTState == CrashNSTState.RUNNING)
@@ -220,6 +221,7 @@ namespace LiveSplit.UI.Components
 			}
 
 			//Otherwise - we're fine. If it is a split that was skipped earlier, we still keep track of how we're standing.
+			
 
 		}
 
@@ -236,6 +238,7 @@ namespace LiveSplit.UI.Components
 			var loadsCurrentTotal = CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex - 1);
 			NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex - 1] += loadsRequiredTotal - loadsCurrentTotal;
 
+			LastSplitSkip = false;
 		}
 
 		private void timer_OnSkipSplit(object sender, EventArgs e)
@@ -244,8 +247,14 @@ namespace LiveSplit.UI.Components
 			skippedPauses += settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex - 1].Name);
 			runningFrames = 0;
 			pausedFrames = 0;
-			
+
 			//We don't need to do anything here - we just keep track of loads per split now.
+			LastSplitSkip = true;
+
+			/*if(settings.AutoSplitterDisableOnSkipUntilSplit)
+			{
+				NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex - 1] = 0;
+			}*/
 		}
 
 		private void timer_OnReset(object sender, TimerPhase value)
@@ -255,6 +264,7 @@ namespace LiveSplit.UI.Components
 			pausedFrames = 0;
 			numberOfPauses = 0;
 			threadRunning = false;
+			LastSplitSkip = false;
 			highResTimer.Stop(joinThread:false);
 			InitNumberOfLoadsFromState();
 		}

@@ -14,47 +14,7 @@ using System.Xml;
 
 namespace LiveSplit.UI.Components
 {
-	public class AutoSplitData
-	{
-		#region Public Fields
-
-		public string Category;
-		public string GameName;
-		public List<AutoSplitEntry> SplitData;
-
-		#endregion Public Fields
-
-		#region Public Constructors
-
-		public AutoSplitData(string gameName, string category)
-		{
-			SplitData = new List<AutoSplitEntry>();
-			GameName = gameName;
-			Category = category;
-		}
-
-		#endregion Public Constructors
-	}
-
-	public class AutoSplitEntry
-	{
-		#region Public Fields
-
-		public int NumberOfLoads = 2;
-		public string SplitName = "";
-
-		#endregion Public Fields
-
-		#region Public Constructors
-
-		public AutoSplitEntry(string splitName, int numberOfLoads)
-		{
-			SplitName = splitName;
-			NumberOfLoads = numberOfLoads;
-		}
-
-		#endregion Public Constructors
-	}
+	
 
 	public partial class CrashNSTLoadRemovalSettings : UserControl
 	{
@@ -62,8 +22,10 @@ namespace LiveSplit.UI.Components
 
 		public bool AutoSplitterEnabled = false;
 
+		public bool AutoSplitterDisableOnSkipUntilSplit = false;
+
 		//Number of frames to wait for a change from load -> running and vice versa.
-		public int AutoSplitterJitterToleranceFrames = 3;
+		public int AutoSplitterJitterToleranceFrames = 8;
 
 		#endregion Public Fields
 
@@ -401,6 +363,8 @@ namespace LiveSplit.UI.Components
 			settingsNode.AppendChild(captureRegionNode);
 
 			settingsNode.AppendChild(ToElement(document, "AutoSplitEnabled", enableAutoSplitterChk.Checked));
+			settingsNode.AppendChild(ToElement(document, "AutoSplitDisableOnSkipUntilSplit", chkAutoSplitterDisableOnSkip.Checked));
+
 
 			var splitsNode = document.CreateElement("AutoSplitGames");
 
@@ -511,6 +475,11 @@ namespace LiveSplit.UI.Components
 				if (element["AutoSplitEnabled"] != null)
 				{
 					enableAutoSplitterChk.Checked = Convert.ToBoolean(element["AutoSplitEnabled"].InnerText);
+				}
+
+				if (element["AutoSplitDisableOnSkipUntilSplit"] != null)
+				{
+					chkAutoSplitterDisableOnSkip.Checked = Convert.ToBoolean(element["AutoSplitDisableOnSkipUntilSplit"].InnerText);
 				}
 
 				if (element["AutoSplitGames"] != null)
@@ -710,7 +679,7 @@ namespace LiveSplit.UI.Components
 			var capture = CaptureImage();
 			var features = FeatureDetector.featuresFromBitmap(capture);
 			int tempMatchingBins = 0;
-			var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), out tempMatchingBins, false);
+			var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, false);
 
 			lastFeatures = features;
 			lastDiagnosticCapture = capture;
@@ -973,5 +942,51 @@ namespace LiveSplit.UI.Components
 		}
 
 		#endregion Private Methods
+
+		private void chkAutoSplitterDisableOnSkip_CheckedChanged(object sender, EventArgs e)
+		{
+			AutoSplitterDisableOnSkipUntilSplit = chkAutoSplitterDisableOnSkip.Checked;
+		}
+	}
+	public class AutoSplitData
+	{
+		#region Public Fields
+
+		public string Category;
+		public string GameName;
+		public List<AutoSplitEntry> SplitData;
+
+		#endregion Public Fields
+
+		#region Public Constructors
+
+		public AutoSplitData(string gameName, string category)
+		{
+			SplitData = new List<AutoSplitEntry>();
+			GameName = gameName;
+			Category = category;
+		}
+
+		#endregion Public Constructors
+	}
+
+	public class AutoSplitEntry
+	{
+		#region Public Fields
+
+		public int NumberOfLoads = 2;
+		public string SplitName = "";
+
+		#endregion Public Fields
+
+		#region Public Constructors
+
+		public AutoSplitEntry(string splitName, int numberOfLoads)
+		{
+			SplitName = splitName;
+			NumberOfLoads = numberOfLoads;
+		}
+
+		#endregion Public Constructors
 	}
 }

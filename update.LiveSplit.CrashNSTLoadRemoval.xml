@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <updates>
+	<update version="2.0">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Improved detection by a bit, added option to disable AutoSplitter on skip until manual split, made AutoSplitter more resistant to wrong detections.
+			</change>
+		</changelog>
+	</update>
 	<update version="1.9">
 		<files>
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
