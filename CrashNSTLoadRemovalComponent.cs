@@ -42,19 +42,19 @@ namespace LiveSplit.UI.Components
 		private CrashNSTState NSTState = CrashNSTState.RUNNING;
 		private int runningFrames = 0;
 		private int pausedFrames = 0;
-		private int numberOfPauses = 0;
 		private int pausedFramesSegment = 0;
 		private string GameName = "";
 		private string GameCategory = "";
+		private int NumberOfSplits = 0;
+		private List<string> SplitNames;
 		private DateTime lastTime;
 		private DateTime segmentTimeStart;
 		private LiveSplitState liveSplitState;
 		private Thread captureThread;
 		private bool threadRunning = false;
-		private long captureDelay = 20;
 		private double framesSum = 0.0;
 		private int framesSumRounded = 0;
-		private int skippedPauses = 0;
+		private int framesSinceLastManualSplit = 0;
 		private bool LastSplitSkip = false;
 		
 		private HighResolutionTimer.HighResolutionTimer highResTimer;
@@ -62,9 +62,17 @@ namespace LiveSplit.UI.Components
 
 		public CrashNSTLoadRemovalComponent(LiveSplitState state)
 		{
-
+			
 			GameName = state.Run.GameName;
 			GameCategory = state.Run.CategoryName;
+			NumberOfSplits = state.Run.Count;
+			SplitNames = new List<string>();
+
+			foreach(var split in state.Run)
+			{
+				SplitNames.Add(split.Name);
+			}
+
 			liveSplitState = state;
 			NumberOfLoadsPerSplit = new List<int>();
 			InitNumberOfLoadsFromState();
@@ -128,6 +136,7 @@ namespace LiveSplit.UI.Components
 		{
 			if (timerStarted)
 			{
+				framesSinceLastManualSplit++;
 				//Console.WriteLine("TIME NOW: {0}", DateTime.Now - lastTime);
 				//Console.WriteLine("TIME DIFF START: {0}", DateTime.Now - lastTime);
 				lastTime = DateTime.Now;
@@ -186,13 +195,19 @@ namespace LiveSplit.UI.Components
 						pausedFrames = 0;
 						//We enter pause.
 						NSTState = CrashNSTState.LOADING;
-						NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex]++;
-
-						if (CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex) >= settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
+						if (framesSinceLastManualSplit >= settings.AutoSplitterManualSplitDelayFrames)
 						{
-							timer.Split();
+							NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex]++;
+
+							if (CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex) >= settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
+							{
 							
+									timer.Split();
+							
+							
+							}
 						}
+
 					}
 					else if (NSTState == CrashNSTState.LOADING && runningFrames >= settings.AutoSplitterJitterToleranceFrames)
 					{
@@ -213,7 +228,7 @@ namespace LiveSplit.UI.Components
 			//skippedPauses -= settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex + 1].Name);
 			runningFrames = 0;
 			pausedFrames = 0;
-
+			
 			//If we undo a split that already has met the required number of loads, we probably want the number to reset.
 			if(NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex] >= settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
 			{
@@ -229,8 +244,7 @@ namespace LiveSplit.UI.Components
 		{
 			runningFrames = 0;
 			pausedFrames = 0;
-			numberOfPauses = 0;
-
+			framesSinceLastManualSplit = 0;
 			//If we split, we add all remaining loads to the last split.
 			//This means that the autosplitter now starts at 0 loads on the next split.
 			//This is just necessary for manual splits, as automatic splits will always have a difference of 0.
@@ -244,7 +258,6 @@ namespace LiveSplit.UI.Components
 		private void timer_OnSkipSplit(object sender, EventArgs e)
 		{
 
-			skippedPauses += settings.GetAutoSplitNumberOfLoadsForSplit(liveSplitState.Run[liveSplitState.CurrentSplitIndex - 1].Name);
 			runningFrames = 0;
 			pausedFrames = 0;
 
@@ -262,7 +275,7 @@ namespace LiveSplit.UI.Components
 			timerStarted = false;
 			runningFrames = 0;
 			pausedFrames = 0;
-			numberOfPauses = 0;
+			framesSinceLastManualSplit = 0;
 			threadRunning = false;
 			LastSplitSkip = false;
 			highResTimer.Stop(joinThread:false);
@@ -274,8 +287,8 @@ namespace LiveSplit.UI.Components
 			InitNumberOfLoadsFromState();
 			timer.InitializeGameTime();
 			runningFrames = 0;
+			framesSinceLastManualSplit = 0;
 			pausedFrames = 0;
-			numberOfPauses = 0;
 			timerStarted = true;
 			threadRunning = true;
 			//StartCaptureThread();
@@ -307,8 +320,51 @@ namespace LiveSplit.UI.Components
 		}
 
 
+		private bool SplitsAreDifferent(LiveSplitState newState)
+		{
+			//If GameName / Category is different
+			if (GameName != newState.Run.GameName || GameCategory != newState.Run.CategoryName)
+			{
+				GameName = newState.Run.GameName;
+				GameCategory = newState.Run.CategoryName;
+				return true;
+			}
+
+			//If number of splits is different
+			if(newState.Run.Count != liveSplitState.Run.Count)
+			{
+				NumberOfSplits = newState.Run.Count;
+				return true;
+			}
+
+			//Check if any split name is different.
+			for(int splitIdx = 0; splitIdx < newState.Run.Count; splitIdx++)
+			{
+				if (newState.Run[splitIdx].Name != SplitNames[splitIdx])
+				{
+					
+					SplitNames = new List<string>();
+
+					foreach (var split in newState.Run)
+					{
+						SplitNames.Add(split.Name);
+					}
+
+					return true;
+				}
+					
+			}
+
+			return false;
+		}
 		public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
+			if (SplitsAreDifferent(state))
+			{
+				settings.ChangeAutoSplitSettingsToGameName(GameName, GameCategory);
+			}
+			liveSplitState = state;
+			/*
 			liveSplitState = state;
 			if (GameName != state.Run.GameName || GameCategory != state.Run.CategoryName)
 			{
@@ -318,9 +374,11 @@ namespace LiveSplit.UI.Components
 
 				settings.ChangeAutoSplitSettingsToGameName(GameName, GameCategory);
 			}
+			*/
 
 
-			CaptureLoads();
+
+				CaptureLoads();
 
 
 		}

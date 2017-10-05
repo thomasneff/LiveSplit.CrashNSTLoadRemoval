@@ -27,6 +27,10 @@ namespace LiveSplit.UI.Components
 		//Number of frames to wait for a change from load -> running and vice versa.
 		public int AutoSplitterJitterToleranceFrames = 8;
 
+		//If you split manually during "AutoSplitter" mode, I ignore AutoSplitter-splits for 50 frames. (A little less than 2 seconds)
+		//This means that if a split would happen during these frames, it is ignored.
+		public int AutoSplitterManualSplitDelayFrames = 50;
+
 		#endregion Public Fields
 
 		#region Private Fields
@@ -503,6 +507,12 @@ namespace LiveSplit.UI.Components
 						foreach (XmlElement number_of_loads in game_element)
 						{
 							var up_down_controls = tabPage2.Controls.Find(number_of_loads.LocalName, true);
+
+							//This can happen if the layout was not saved and contains old splits.
+							if(up_down_controls == null || up_down_controls.Length == 0)
+							{
+								continue;
+							}
 
 							if (usedSplitNames.ContainsKey(number_of_loads.LocalName) == false)
 							{

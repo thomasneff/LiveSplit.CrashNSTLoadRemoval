@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <updates>
+	<update version="2.1">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Fixed AutoSplitter breaking when Splits are changed/reordered. Added a delay when manually splitting in AutoSplitter-mode to prevent double-splits.
+			</change>
+		</changelog>
+	</update>
 	<update version="2.0">
 		<files>
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
@@ -66,8 +76,10 @@
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
 		</files>
 		<changelog>
-			<change>Added ability to select custom scale for Windows DPI Scaling issues.
-			This will allow you to change the capture scale if you have scaling enabled on Windows.</change>
+			<change>
+				Added ability to select custom scale for Windows DPI Scaling issues.
+				This will allow you to change the capture scale if you have scaling enabled on Windows.
+			</change>
 		</changelog>
 	</update>
 	<update version="1.3">
@@ -78,20 +90,20 @@
 			<change>More bugfixes, support mouse drag in preview.</change>
 		</changelog>
 	</update>
-  <update version="1.1">
-    <files>
-      <file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
-    </files>
-    <changelog>
-      <change>Fixed tons of bugs, added region selection/cropping to preview in settings.</change>
-    </changelog>
-  </update>
-  <update version="1.0">
-    <files>
-      <file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
-    </files>
-    <changelog>
-      <change>Basically make everything work</change>
-    </changelog>
-  </update>
+	<update version="1.1">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Fixed tons of bugs, added region selection/cropping to preview in settings.</change>
+		</changelog>
+	</update>
+	<update version="1.0">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Basically make everything work</change>
+		</changelog>
+	</update>
 </updates>
