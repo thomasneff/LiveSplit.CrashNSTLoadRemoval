@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using CrashNSaneLoadDetector;
-using System.Threading;
+//using System.Threading;
 
 namespace LiveSplit.UI.Components
 {
@@ -50,14 +50,14 @@ namespace LiveSplit.UI.Components
 		private DateTime lastTime;
 		private DateTime segmentTimeStart;
 		private LiveSplitState liveSplitState;
-		private Thread captureThread;
+		//private Thread captureThread;
 		private bool threadRunning = false;
 		private double framesSum = 0.0;
 		private int framesSumRounded = 0;
 		private int framesSinceLastManualSplit = 0;
 		private bool LastSplitSkip = false;
 		
-		private HighResolutionTimer.HighResolutionTimer highResTimer;
+		//private HighResolutionTimer.HighResolutionTimer highResTimer;
 		private List<int> NumberOfLoadsPerSplit;
 
 		public CrashNSTLoadRemovalComponent(LiveSplitState state)
@@ -88,8 +88,8 @@ namespace LiveSplit.UI.Components
 			timer.CurrentState.OnUndoSplit += timer_OnUndoSplit;
 			timer.CurrentState.OnPause += timer_OnPause;
 			timer.CurrentState.OnResume += timer_OnResume;
-			highResTimer = new HighResolutionTimer.HighResolutionTimer(5.0f);
-			highResTimer.Elapsed += (s, e) => { CaptureLoads(); };
+			//highResTimer = new HighResolutionTimer.HighResolutionTimer(5.0f);
+			//highResTimer.Elapsed += (s, e) => { CaptureLoads(); };
 		}
 
 		private void timer_OnResume(object sender, EventArgs e)
@@ -278,7 +278,7 @@ namespace LiveSplit.UI.Components
 			framesSinceLastManualSplit = 0;
 			threadRunning = false;
 			LastSplitSkip = false;
-			highResTimer.Stop(joinThread:false);
+			//highResTimer.Stop(joinThread:false);
 			InitNumberOfLoadsFromState();
 		}
 
@@ -297,13 +297,13 @@ namespace LiveSplit.UI.Components
 
 		void StartCaptureThread()
 		{
-			captureThread = new Thread(() =>
-			{
-				System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-				while (threadRunning)
-				{
+			//captureThread = new Thread(() =>
+			//{
+			//	System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+			//	while (threadRunning)
+			//	{
 					//watch.Restart();
-					CaptureLoads();
+			//		CaptureLoads();
 					//TODO: test rounding of framecounts in output, more importantly:
 					//TEST FINAL TIME TO SEE IF IT IS ACCURATE WITH THIS,
 					//THEN ADD SLEEPS FOR PERFORMANCE
@@ -314,9 +314,9 @@ namespace LiveSplit.UI.Components
 					{
 						;
 					}*/
-				}
-			});
-			captureThread.Start();
+			//	}
+			//});
+			//captureThread.Start();*/
 		}
 
 
