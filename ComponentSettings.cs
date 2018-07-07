@@ -24,6 +24,8 @@ namespace LiveSplit.UI.Components
 
 		public bool AutoSplitterDisableOnSkipUntilSplit = false;
 
+		public bool RemoveTransitions = false;
+
 		//Number of frames to wait for a change from load -> running and vice versa.
 		public int AutoSplitterJitterToleranceFrames = 8;
 
@@ -368,7 +370,7 @@ namespace LiveSplit.UI.Components
 
 			settingsNode.AppendChild(ToElement(document, "AutoSplitEnabled", enableAutoSplitterChk.Checked));
 			settingsNode.AppendChild(ToElement(document, "AutoSplitDisableOnSkipUntilSplit", chkAutoSplitterDisableOnSkip.Checked));
-
+			settingsNode.AppendChild(ToElement(document, "RemoveTransitions", chkRemoveTransitions.Checked));
 
 			var splitsNode = document.CreateElement("AutoSplitGames");
 
@@ -484,6 +486,11 @@ namespace LiveSplit.UI.Components
 				if (element["AutoSplitDisableOnSkipUntilSplit"] != null)
 				{
 					chkAutoSplitterDisableOnSkip.Checked = Convert.ToBoolean(element["AutoSplitDisableOnSkipUntilSplit"].InnerText);
+				}
+
+				if (element["RemoveTransitions"] != null)
+				{
+					chkRemoveTransitions.Checked = Convert.ToBoolean(element["RemoveTransitions"].InnerText);
 				}
 
 				if (element["AutoSplitGames"] != null)
@@ -649,52 +656,61 @@ namespace LiveSplit.UI.Components
 
 		private void DrawPreview()
 		{
-			ImageCaptureInfo copy = imageCaptureInfo;
-			copy.captureSizeX = previewPictureBox.Width;
-			copy.captureSizeY = previewPictureBox.Height;
+			try
+			{
 
-			//Show something in the preview
-			previewImage = CaptureImageFullPreview(ref copy);
-			float crop_size_x = copy.actual_crop_size_x;
-			float crop_size_y = copy.actual_crop_size_y;
+			
+				ImageCaptureInfo copy = imageCaptureInfo;
+				copy.captureSizeX = previewPictureBox.Width;
+				copy.captureSizeY = previewPictureBox.Height;
 
-			lastFullCapture = previewImage;
-			//Draw selection rectangle
-			DrawCaptureRectangleBitmap();
+				//Show something in the preview
+				previewImage = CaptureImageFullPreview(ref copy);
+				float crop_size_x = copy.actual_crop_size_x;
+				float crop_size_y = copy.actual_crop_size_y;
 
-			//Compute image crop coordinates according to selection rectangle
+				lastFullCapture = previewImage;
+				//Draw selection rectangle
+				DrawCaptureRectangleBitmap();
 
-			//Get raw image size from imageCaptureInfo.actual_crop_size to compute scaling between raw and rectangle coordinates
+				//Compute image crop coordinates according to selection rectangle
 
-			//Console.WriteLine("SIZE X: {0}, SIZE Y: {1}", imageCaptureInfo.actual_crop_size_x, imageCaptureInfo.actual_crop_size_y);
+				//Get raw image size from imageCaptureInfo.actual_crop_size to compute scaling between raw and rectangle coordinates
 
-			imageCaptureInfo.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
-			imageCaptureInfo.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
-			imageCaptureInfo.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
-			imageCaptureInfo.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
+				//Console.WriteLine("SIZE X: {0}, SIZE Y: {1}", imageCaptureInfo.actual_crop_size_x, imageCaptureInfo.actual_crop_size_y);
 
-			copy.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
-			copy.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
-			copy.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
-			copy.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
+				imageCaptureInfo.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
+				imageCaptureInfo.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
+				imageCaptureInfo.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
+				imageCaptureInfo.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
 
-			Bitmap full_cropped_capture = CaptureImageFullPreview(ref copy, useCrop: true);
-			croppedPreviewPictureBox.Image = full_cropped_capture;
-			lastFullCroppedCapture = full_cropped_capture;
+				copy.crop_coordinate_left = selectionRectanglePreviewBox.Left * (crop_size_x / previewPictureBox.Width);
+				copy.crop_coordinate_right = selectionRectanglePreviewBox.Right * (crop_size_x / previewPictureBox.Width);
+				copy.crop_coordinate_top = selectionRectanglePreviewBox.Top * (crop_size_y / previewPictureBox.Height);
+				copy.crop_coordinate_bottom = selectionRectanglePreviewBox.Bottom * (crop_size_y / previewPictureBox.Height);
 
-			copy.captureSizeX = captureSize.Width;
-			copy.captureSizeY = captureSize.Height;
+				Bitmap full_cropped_capture = CaptureImageFullPreview(ref copy, useCrop: true);
+				croppedPreviewPictureBox.Image = full_cropped_capture;
+				lastFullCroppedCapture = full_cropped_capture;
 
-			//Show matching bins for preview
-			var capture = CaptureImage();
-			var features = FeatureDetector.featuresFromBitmap(capture);
-			int tempMatchingBins = 0;
-			var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, false);
+				copy.captureSizeX = captureSize.Width;
+				copy.captureSizeY = captureSize.Height;
 
-			lastFeatures = features;
-			lastDiagnosticCapture = capture;
-			lastMatchingBins = tempMatchingBins;
-			matchDisplayLabel.Text = tempMatchingBins.ToString();
+				//Show matching bins for preview
+				var capture = CaptureImage();
+				var features = FeatureDetector.featuresFromBitmap(capture);
+				int tempMatchingBins = 0;
+				var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, -1.0f, false);
+
+				lastFeatures = features;
+				lastDiagnosticCapture = capture;
+				lastMatchingBins = tempMatchingBins;
+				matchDisplayLabel.Text = tempMatchingBins.ToString();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error: " + ex.ToString());
+			}
 		}
 
 		private void enableAutoSplitterChk_CheckedChanged(object sender, EventArgs e)
@@ -756,43 +772,50 @@ namespace LiveSplit.UI.Components
 
 		private void RefreshCaptureWindowList()
 		{
-			Process[] processListtmp = Process.GetProcesses();
-			List<Process> processes_with_name = new List<Process>();
-
-			if (captureIDs != null)
+			try
 			{
-				if (processListComboBox.SelectedIndex < captureIDs.Count && processListComboBox.SelectedIndex >= 0)
+				Process[] processListtmp = Process.GetProcesses();
+				List<Process> processes_with_name = new List<Process>();
+
+				if (captureIDs != null)
 				{
-					selectedCaptureID = processListComboBox.SelectedItem.ToString();
+					if (processListComboBox.SelectedIndex < captureIDs.Count && processListComboBox.SelectedIndex >= 0)
+					{
+						selectedCaptureID = processListComboBox.SelectedItem.ToString();
+					}
 				}
-			}
 
-			captureIDs = new List<string>();
+				captureIDs = new List<string>();
 
-			processListComboBox.Items.Clear();
-			numScreens = 0;
-			foreach (var screen in Screen.AllScreens)
-			{
-				// For each screen, add the screen properties to a list box.
-				processListComboBox.Items.Add("Screen: " + screen.DeviceName + ", " + screen.Bounds.ToString());
-				captureIDs.Add("Screen: " + screen.DeviceName);
-				numScreens++;
-			}
-			foreach (Process process in processListtmp)
-			{
-				if (!String.IsNullOrEmpty(process.MainWindowTitle))
+				processListComboBox.Items.Clear();
+				numScreens = 0;
+				foreach (var screen in Screen.AllScreens)
 				{
-					//Console.WriteLine("Process: {0} ID: {1} Window title: {2} HWND PTR {3}", process.ProcessName, process.Id, process.MainWindowTitle, process.MainWindowHandle);
-					processListComboBox.Items.Add(process.ProcessName + ": " + process.MainWindowTitle);
-					captureIDs.Add(process.ProcessName);
-					processes_with_name.Add(process);
+					// For each screen, add the screen properties to a list box.
+					processListComboBox.Items.Add("Screen: " + screen.DeviceName + ", " + screen.Bounds.ToString());
+					captureIDs.Add("Screen: " + screen.DeviceName);
+					numScreens++;
 				}
+				foreach (Process process in processListtmp)
+				{
+					if (!String.IsNullOrEmpty(process.MainWindowTitle))
+					{
+						//Console.WriteLine("Process: {0} ID: {1} Window title: {2} HWND PTR {3}", process.ProcessName, process.Id, process.MainWindowTitle, process.MainWindowHandle);
+						processListComboBox.Items.Add(process.ProcessName + ": " + process.MainWindowTitle);
+						captureIDs.Add(process.ProcessName);
+						processes_with_name.Add(process);
+					}
+				}
+
+				UpdateIndexToCaptureID();
+
+				//processListComboBox.SelectedIndex = 0;
+				processList = processes_with_name.ToArray();
 			}
-
-			UpdateIndexToCaptureID();
-
-			//processListComboBox.SelectedIndex = 0;
-			processList = processes_with_name.ToArray();
+			catch(Exception ex)
+			{
+				Console.WriteLine("Error: " + ex.ToString());
+			}
 		}
 
 		private string removeInvalidXMLCharacters(string in_string)
@@ -849,21 +872,28 @@ namespace LiveSplit.UI.Components
 
 		private void saveDiagnosticsButton_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog fbd = new FolderBrowserDialog();
-
-			var result = fbd.ShowDialog();
-
-			if (result != DialogResult.OK)
+			try
 			{
-				return;
-			}
+				FolderBrowserDialog fbd = new FolderBrowserDialog();
 
-			//System.IO.Directory.CreateDirectory(fbd.SelectedPath);
-			numCaptures++;
-			lastFullCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			lastFullCroppedCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_CROPPED_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			lastDiagnosticCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_DIAGNOSTIC_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
-			saveFeatureVectorToTxt(lastFeatures, numCaptures.ToString() + "_FEATURES_" + lastMatchingBins + ".txt", fbd.SelectedPath);
+				var result = fbd.ShowDialog();
+
+				if (result != DialogResult.OK)
+				{
+					return;
+				}
+
+				//System.IO.Directory.CreateDirectory(fbd.SelectedPath);
+				numCaptures++;
+				lastFullCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+				lastFullCroppedCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_FULL_CROPPED_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+				lastDiagnosticCapture.Save(fbd.SelectedPath + "/" + numCaptures.ToString() + "_DIAGNOSTIC_" + lastMatchingBins + ".jpg", ImageFormat.Jpeg);
+				saveFeatureVectorToTxt(lastFeatures, numCaptures.ToString() + "_FEATURES_" + lastMatchingBins + ".txt", fbd.SelectedPath);
+			}
+			catch(Exception ex)
+			{
+				Console.WriteLine("Error: " + ex.ToString());
+			}
 		}
 
 		private void saveFeatureVectorToTxt(List<int> featureVector, string filename, string directoryName)
@@ -948,6 +978,7 @@ namespace LiveSplit.UI.Components
 
 		private void updatePreviewButton_Click(object sender, EventArgs e)
 		{
+
 			DrawPreview();
 		}
 
@@ -956,6 +987,11 @@ namespace LiveSplit.UI.Components
 		private void chkAutoSplitterDisableOnSkip_CheckedChanged(object sender, EventArgs e)
 		{
 			AutoSplitterDisableOnSkipUntilSplit = chkAutoSplitterDisableOnSkip.Checked;
+		}
+
+		private void chkRemoveTransitions_CheckedChanged(object sender, EventArgs e)
+		{
+			RemoveTransitions = chkRemoveTransitions.Checked;
 		}
 	}
 	public class AutoSplitData

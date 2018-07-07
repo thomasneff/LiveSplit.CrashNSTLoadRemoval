@@ -25,4 +25,5 @@ Add this to LiveSplit by going into your Layout Editor -> Add -> Control -> Cras
 
 You can specify to capture either the full primary Display (default) or an open window. This window has to be open (not minimized) but does not have to be in the foreground.
 
-This might not work for windows with DirectX/OpenGL surfaces, nothing I can do about that. (Use Display capture for those cases, sorry). In those cases, you will probably get a black image in the capture preview in the component settings.
+This might not work for windows with DirectX/OpenGL surfaces, nothing I can do about that. (Use Display capture for those cases, sorry, although even that might not work in some cases). In those cases, you will probably get a black image in the capture preview in the component settings.
+

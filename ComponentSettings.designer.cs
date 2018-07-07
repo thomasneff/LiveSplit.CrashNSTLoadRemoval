@@ -46,13 +46,14 @@
 			this.updatePreviewButton = new System.Windows.Forms.Button();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.chkRemoveTransitions = new System.Windows.Forms.CheckBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.chkAutoSplitterDisableOnSkip = new System.Windows.Forms.CheckBox();
 			this.label6 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
 			this.autoSplitNameLbl = new System.Windows.Forms.Label();
 			this.autoSplitCategoryLbl = new System.Windows.Forms.Label();
 			this.enableAutoSplitterChk = new System.Windows.Forms.CheckBox();
-			this.chkAutoSplitterDisableOnSkip = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.previewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.croppedPreviewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
@@ -270,6 +271,7 @@
 			// tabPage1
 			// 
 			this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+			this.tabPage1.Controls.Add(this.chkRemoveTransitions);
 			this.tabPage1.Controls.Add(this.panel1);
 			this.tabPage1.Controls.Add(this.lblVersion);
 			this.tabPage1.Controls.Add(this.label4);
@@ -285,6 +287,17 @@
 			this.tabPage1.Size = new System.Drawing.Size(468, 506);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "Setup";
+			// 
+			// chkRemoveTransitions
+			// 
+			this.chkRemoveTransitions.AutoSize = true;
+			this.chkRemoveTransitions.Location = new System.Drawing.Point(311, 87);
+			this.chkRemoveTransitions.Name = "chkRemoveTransitions";
+			this.chkRemoveTransitions.Size = new System.Drawing.Size(120, 17);
+			this.chkRemoveTransitions.TabIndex = 38;
+			this.chkRemoveTransitions.Text = "Remove Transitions";
+			this.chkRemoveTransitions.UseVisualStyleBackColor = true;
+			this.chkRemoveTransitions.CheckedChanged += new System.EventHandler(this.chkRemoveTransitions_CheckedChanged);
 			// 
 			// tabPage2
 			// 
@@ -302,6 +315,17 @@
 			this.tabPage2.Size = new System.Drawing.Size(468, 506);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "AutoSplitter";
+			// 
+			// chkAutoSplitterDisableOnSkip
+			// 
+			this.chkAutoSplitterDisableOnSkip.AutoSize = true;
+			this.chkAutoSplitterDisableOnSkip.Location = new System.Drawing.Point(150, 9);
+			this.chkAutoSplitterDisableOnSkip.Name = "chkAutoSplitterDisableOnSkip";
+			this.chkAutoSplitterDisableOnSkip.Size = new System.Drawing.Size(239, 17);
+			this.chkAutoSplitterDisableOnSkip.TabIndex = 43;
+			this.chkAutoSplitterDisableOnSkip.Text = "Disable AutoSplitter on Skip until manual Split";
+			this.chkAutoSplitterDisableOnSkip.UseVisualStyleBackColor = true;
+			this.chkAutoSplitterDisableOnSkip.CheckedChanged += new System.EventHandler(this.chkAutoSplitterDisableOnSkip_CheckedChanged);
 			// 
 			// label6
 			// 
@@ -358,17 +382,6 @@
 			this.enableAutoSplitterChk.UseVisualStyleBackColor = true;
 			this.enableAutoSplitterChk.CheckedChanged += new System.EventHandler(this.enableAutoSplitterChk_CheckedChanged);
 			// 
-			// chkAutoSplitterDisableOnSkip
-			// 
-			this.chkAutoSplitterDisableOnSkip.AutoSize = true;
-			this.chkAutoSplitterDisableOnSkip.Location = new System.Drawing.Point(150, 9);
-			this.chkAutoSplitterDisableOnSkip.Name = "chkAutoSplitterDisableOnSkip";
-			this.chkAutoSplitterDisableOnSkip.Size = new System.Drawing.Size(239, 17);
-			this.chkAutoSplitterDisableOnSkip.TabIndex = 43;
-			this.chkAutoSplitterDisableOnSkip.Text = "Disable AutoSplitter on Skip until manual Split";
-			this.chkAutoSplitterDisableOnSkip.UseVisualStyleBackColor = true;
-			this.chkAutoSplitterDisableOnSkip.CheckedChanged += new System.EventHandler(this.chkAutoSplitterDisableOnSkip_CheckedChanged);
-			// 
 			// CrashNSTLoadRemovalSettings
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -418,5 +431,6 @@
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.CheckBox chkAutoSplitterDisableOnSkip;
+		private System.Windows.Forms.CheckBox chkRemoveTransitions;
 	}
 }

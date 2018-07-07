@@ -28,10 +28,13 @@ namespace LiveSplit.UI.Components
 		public CrashNSTLoadRemovalSettings settings { get; set; }
 
 		private bool isLoading = false;
+		private bool isTransition = false;
 		private int matchingBins = 0;
+		private float numSecondsTransitionMax = 5.0f; // A transition can at most be 5 seconds long, otherwise it is not counted
 
 		private TimerModel timer;
 		private bool timerStarted = false;
+		private bool postLoadTransition = false;
 
 		public enum CrashNSTState
 		{
@@ -48,6 +51,8 @@ namespace LiveSplit.UI.Components
 		private int NumberOfSplits = 0;
 		private List<string> SplitNames;
 		private DateTime lastTime;
+		private DateTime transitionStart;
+
 		private DateTime segmentTimeStart;
 		private LiveSplitState liveSplitState;
 		//private Thread captureThread;
@@ -134,92 +139,178 @@ namespace LiveSplit.UI.Components
 
 		private void CaptureLoads()
 		{
-			if (timerStarted)
+			try
 			{
-				framesSinceLastManualSplit++;
-				//Console.WriteLine("TIME NOW: {0}", DateTime.Now - lastTime);
-				//Console.WriteLine("TIME DIFF START: {0}", DateTime.Now - lastTime);
-				lastTime = DateTime.Now;
-				//Capture image using the settings defined for the component
-				Bitmap capture = settings.CaptureImage();
 
-				//Feed the image to the feature detection
-				var features = FeatureDetector.featuresFromBitmap(capture);
-				int tempMatchingBins = 0;
-				bool wasLoading = isLoading;
-				isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, false);
-				matchingBins = tempMatchingBins;
 
-				timer.CurrentState.IsGameTimePaused = isLoading;
-
-				if (isLoading && !wasLoading)
+				if (timerStarted)
 				{
-					segmentTimeStart = DateTime.Now;
-				}
+					framesSinceLastManualSplit++;
+					//Console.WriteLine("TIME NOW: {0}", DateTime.Now - lastTime);
+					//Console.WriteLine("TIME DIFF START: {0}", DateTime.Now - lastTime);
+					lastTime = DateTime.Now;
+					//Capture image using the settings defined for the component
+					Bitmap capture = settings.CaptureImage();
 
-				if (isLoading)
-				{
-					pausedFramesSegment++; 
-				}
+					//Feed the image to the feature detection
+					var features = FeatureDetector.featuresFromBitmap(capture);
+					int tempMatchingBins = 0;
+					bool wasLoading = isLoading;
+					bool wasTransition = isTransition;
 
-				if (wasLoading && !isLoading)
-				{
-					TimeSpan delta = (DateTime.Now - segmentTimeStart);
-					framesSum += delta.TotalSeconds * 60.0f;
-					int framesRounded = Convert.ToInt32(delta.TotalSeconds * 60.0f);
-					framesSumRounded += framesRounded;
-					Console.WriteLine("SEGMENT FRAMES: {0}, fromTime (@60fps) {1}, timeDelta {2}, totalFrames {3}, fromTime(int) {4}, totalFrames(int) {5}",
-						pausedFramesSegment, delta.TotalSeconds,
-						delta.TotalSeconds * 60.0f, framesSum, framesRounded, framesSumRounded);
-					pausedFramesSegment = 0;
-				}
+					//TODO: should we "learn" the black level automatically? we could do this during the first few transitions, by keeping track of the minimum histogram values, and dynamically adjusting the number of black bins?
 
-
-				if (settings.AutoSplitterEnabled && !(settings.AutoSplitterDisableOnSkipUntilSplit && LastSplitSkip))
-				{
-					//This is just so that if the detection is not correct by a single frame, it still only splits if a few successive frames are loading
-					if (isLoading && NSTState == CrashNSTState.RUNNING)
+					try
 					{
-						pausedFrames++;
-						runningFrames = 0;
+						isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, -1.0f, false);
 					}
-					else if (!isLoading && NSTState == CrashNSTState.LOADING)
+					catch (Exception ex)
 					{
-						runningFrames++;
-						pausedFrames = 0;
+						isLoading = false;
+						Console.WriteLine("Error: " + ex.ToString());
+						throw ex;
 					}
 
-					if (NSTState == CrashNSTState.RUNNING && pausedFrames >= settings.AutoSplitterJitterToleranceFrames)
+
+					matchingBins = tempMatchingBins;
+
+					timer.CurrentState.IsGameTimePaused = isLoading;
+
+					if (settings.RemoveTransitions)
 					{
-						runningFrames = 0;
-						pausedFrames = 0;
-						//We enter pause.
-						NSTState = CrashNSTState.LOADING;
-						if (framesSinceLastManualSplit >= settings.AutoSplitterManualSplitDelayFrames)
+						try
 						{
-							NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex]++;
-
-							if (CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex) >= settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
-							{
-							
-									timer.Split();
-							
-							
-							}
+							isTransition = FeatureDetector.compareFeatureVectorTransition(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, 0.8f, false);//FeatureDetector.isGameTransition(capture, 30);
+						}
+						catch (Exception ex)
+						{
+							isTransition = false;
+							Console.WriteLine("Error: " + ex.ToString());
+							throw ex;
+						}
+						//Console.WriteLine("Transition: {0}", isTransition);
+						if (wasLoading && isTransition)
+						{
+							postLoadTransition = true;
+							transitionStart = DateTime.Now;
 						}
 
+						if (wasTransition == false && isTransition)
+						{
+							//This could be a pre-load transition, start timing it
+							transitionStart = DateTime.Now;
+						}
+
+						if (wasTransition && isLoading)
+						{
+							// This was a pre-load transition, subtract the gametime
+							TimeSpan delta = (DateTime.Now - transitionStart);
+							if (delta.TotalSeconds > numSecondsTransitionMax)
+							{
+								Console.WriteLine("Transition longer than {0} seconds, doesn't count! (Took {1} seconds)", numSecondsTransitionMax, delta.TotalSeconds);
+							}
+							else
+							{
+								timer.CurrentState.SetGameTime(timer.CurrentState.GameTimePauseTime - delta);
+								Console.WriteLine("PRE-LOAD TRANSITION seconds: {0}", delta.TotalSeconds);
+							}
+
+						}
+
+						if (postLoadTransition && isTransition == false)
+						{
+							TimeSpan delta = (DateTime.Now - transitionStart);
+							Console.WriteLine("POST-LOAD TRANSITION seconds: {0}", delta.TotalSeconds);
+						}
+
+						if (postLoadTransition == true && isTransition)
+						{
+							// We are transitioning after a load screen, this stops the timer, and actually increases the load time
+							timer.CurrentState.IsGameTimePaused = true;
+						}
+						else
+						{
+							postLoadTransition = false;
+						}
 					}
-					else if (NSTState == CrashNSTState.LOADING && runningFrames >= settings.AutoSplitterJitterToleranceFrames)
+
+
+
+					if (isLoading && !wasLoading)
 					{
-						runningFrames = 0;
-						pausedFrames = 0;
-						//We enter runnning.
-						NSTState = CrashNSTState.RUNNING;
+						segmentTimeStart = DateTime.Now;
 					}
+
+					if (isLoading)
+					{
+						pausedFramesSegment++;
+					}
+
+					if (wasLoading && !isLoading)
+					{
+						TimeSpan delta = (DateTime.Now - segmentTimeStart);
+						framesSum += delta.TotalSeconds * 60.0f;
+						int framesRounded = Convert.ToInt32(delta.TotalSeconds * 60.0f);
+						framesSumRounded += framesRounded;
+						Console.WriteLine("SEGMENT FRAMES: {0}, fromTime (@60fps) {1}, timeDelta {2}, totalFrames {3}, fromTime(int) {4}, totalFrames(int) {5}",
+							pausedFramesSegment, delta.TotalSeconds,
+							delta.TotalSeconds * 60.0f, framesSum, framesRounded, framesSumRounded);
+						pausedFramesSegment = 0;
+					}
+
+
+					if (settings.AutoSplitterEnabled && !(settings.AutoSplitterDisableOnSkipUntilSplit && LastSplitSkip))
+					{
+						//This is just so that if the detection is not correct by a single frame, it still only splits if a few successive frames are loading
+						if (isLoading && NSTState == CrashNSTState.RUNNING)
+						{
+							pausedFrames++;
+							runningFrames = 0;
+						}
+						else if (!isLoading && NSTState == CrashNSTState.LOADING)
+						{
+							runningFrames++;
+							pausedFrames = 0;
+						}
+
+						if (NSTState == CrashNSTState.RUNNING && pausedFrames >= settings.AutoSplitterJitterToleranceFrames)
+						{
+							runningFrames = 0;
+							pausedFrames = 0;
+							//We enter pause.
+							NSTState = CrashNSTState.LOADING;
+							if (framesSinceLastManualSplit >= settings.AutoSplitterManualSplitDelayFrames)
+							{
+								NumberOfLoadsPerSplit[liveSplitState.CurrentSplitIndex]++;
+
+								if (CumulativeNumberOfLoadsForSplitIndex(liveSplitState.CurrentSplitIndex) >= settings.GetCumulativeNumberOfLoadsForSplit(liveSplitState.CurrentSplit.Name))
+								{
+
+									timer.Split();
+
+
+								}
+							}
+
+						}
+						else if (NSTState == CrashNSTState.LOADING && runningFrames >= settings.AutoSplitterJitterToleranceFrames)
+						{
+							runningFrames = 0;
+							pausedFrames = 0;
+							//We enter runnning.
+							NSTState = CrashNSTState.RUNNING;
+						}
+					}
+
+
+					//Console.WriteLine("TIME TAKEN FOR DETECTION: {0}", DateTime.Now - lastTime);
 				}
-
-
-				//Console.WriteLine("TIME TAKEN FOR DETECTION: {0}", DateTime.Now - lastTime);
+			}
+			catch (Exception ex)
+			{
+				isTransition = false;
+				isLoading = false;
+				Console.WriteLine("Error: " + ex.ToString());
 			}
 		}
 

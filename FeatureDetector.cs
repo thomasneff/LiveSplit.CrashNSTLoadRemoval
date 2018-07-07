@@ -2,158 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CrashNSaneLoadDetector
 {
 	//This class contains settings, features and methods for computing features from a given Bitmap
-	class FeatureDetector
+	internal class FeatureDetector
 	{
-		//used as a cutoff for when a match is detected correctly
-		private static float varianceOfBinsAllowed = 1.0f;
-		private static float varianceOfBinsAllowedMult = 1.45f;
-		private static float additiveVariance = 2.0f;
-		private static int patchSizeX = 50;
-		private static int patchSizeY = 50;
-		public static int numberOfBinsCorrect = 300;
-		private static int numberOfBins = 16;
-
-		public static bool compareFeatureVector(int[] newVector, int [,] comparison_vectors, out int matchingBins, bool debugOutput = true)
-		{
-			//int[,] comparison_vectors = listOfFeatureVectorsEng;
-			int size = newVector.Length;
-
-			if (comparison_vectors.GetLength(1) < size)
-			{
-				size = comparison_vectors.GetLength(1);
-			}
-
-			//int number_of_bins_needed = 290;// (int) (size * percent_of_bins_correct);
-			
-			int numVectors = comparison_vectors.GetLength(0);
-
-
-			matchingBins = 0;
-			for (int vectorIndex = 0; vectorIndex < numVectors; vectorIndex++)
-			{
-				int tempMatchingBins = 0;
-				//check if the current feature vector matches one of the stored ones closely enough
-				for (int bin = 0; bin < size; bin++)
-				{
-					//Determine upper/lower histogram ranges for matching bins
-					int lower_bound = (int)((comparison_vectors[vectorIndex, bin] / varianceOfBinsAllowedMult) - additiveVariance);
-					int upper_bound = (int)((comparison_vectors[vectorIndex, bin] * varianceOfBinsAllowedMult) + additiveVariance);
-
-
-
-					if (newVector[bin] <= upper_bound && newVector[bin] >= lower_bound)
-					{
-						tempMatchingBins++;
-					}
-
-					//If we can not get a possible match anymore, break for speed
-					if ((bin - tempMatchingBins) > (size - numberOfBinsCorrect))
-					{
-						break;
-					}
-				}
-				matchingBins = Math.Max(matchingBins, tempMatchingBins);
-
-				if (matchingBins >= numberOfBinsCorrect)
-				{
-					int a = 3;
-				}
-
-			}
-			
-
-			if(debugOutput)
-			{
-				System.Console.WriteLine("Matching bins: " + matchingBins);
-			}
-
-			if (matchingBins >= numberOfBinsCorrect)
-			{
-				//if we found enough similarities, we found a match.
-				return true;
-			}
-
-			return false;
-		}
-
-		public static List<int> featuresFromBitmap(Bitmap capture)
-		{
-			List<int> features = new List<int>();
-
-			BitmapData bData = capture.LockBits(new Rectangle(0, 0, capture.Width, capture.Height), ImageLockMode.ReadWrite, capture.PixelFormat);
-			int bmpStride = bData.Stride;
-			int size = bData.Stride * bData.Height;
-
-			byte[] data = new byte[size];
-
-			/*This overload copies data of /size/ into /data/ from location specified (/Scan0/)*/
-			System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
-			int yAdd = 0;
-			int r = 0;
-			int g = 0;
-			int b = 0;
-			//we look at 50x50 patches and compute histogram bins for the a/r/g/b values.
-
-			int stride = 1; //spacing between feature pixels
-
-			for (int patchX = 0; patchX < (capture.Width / patchSizeX); patchX++)
-			{
-				for (int patchY = 0; patchY < (capture.Height / patchSizeY); patchY++)
-				{
-					//int[] patch_hist_a = new int[numberOfBins];
-					int[] patchHistR = new int[numberOfBins];
-					int[] patchHistG = new int[numberOfBins];
-					int[] patchHistB = new int[numberOfBins];
-
-					int xStart = patchX * (patchSizeX * stride);
-					int yStart = patchY * (patchSizeX * stride);
-					int xEnd = (patchX + 1) * (patchSizeX * stride);
-					int yEnd = (patchY + 1) * (patchSizeY * stride);
-
-					for (int x_index = xStart; x_index < xEnd; x_index += stride)
-					{
-						for (int y_index = yStart; y_index < yEnd; y_index += stride)
-						{
-							yAdd = y_index * bmpStride;
-
-							//NOTE: while the pixel format is 32ARGB, reading byte-wise results in BGRA.
-							b = (int)(data[(x_index * 4) + (yAdd) + 0]);
-							g = (int)(data[(x_index * 4) + (yAdd) + 1]);
-							r = (int)(data[(x_index * 4) + (yAdd) + 2]);
-							
-							patchHistR[(r * numberOfBins) / 256]++;
-							patchHistG[(g * numberOfBins) / 256]++;
-							patchHistB[(b * numberOfBins) / 256]++;
-							
-							
-						}
-					}
-
-					//enter the histograms as our features
-					features.AddRange(patchHistR);
-					features.AddRange(patchHistG);
-					features.AddRange(patchHistB);
-				}
-			}
-
-			capture.UnlockBits(bData);
-
-			return features;
-		}
-
-
-
-
-
-
-
+		#region Public Fields
 
 		//this list of vectors is for 300x100, patchSize = 50, numberOfBins = 16
 		//to adapt - if wrongly detected pause, increase match threshold and add wrongly detected runs to list
@@ -1251,7 +1106,6 @@ namespace CrashNSaneLoadDetector
 {992,54,75,37,58,32,32,57,28,33,55,36,37,69,60,845,1003,78,45,36,59,30,31,54,32,33,52,34,55,50,62,846,1030,87,60,51,60,53,57,53,61,234,318,268,141,27,0,0,520,91,60,40,50,41,33,55,35,33,53,36,48,63,72,1270,540,83,50,44,53,35,36,51,33,37,50,35,56,58,69,1270,630,93,69,72,67,84,288,474,437,264,22,0,0,0,0,0,19,42,27,52,81,30,31,77,28,31,88,29,69,67,105,1724,25,39,35,48,79,28,30,77,27,31,89,25,90,44,112,1721,66,64,58,77,57,65,66,57,93,236,452,545,619,45,0,0,258,49,45,38,66,55,28,95,32,38,87,40,100,52,131,1386,269,47,44,32,79,42,30,92,32,42,85,39,100,56,129,1382,311,114,83,89,86,107,324,551,489,333,13,0,0,0,0,0,1016,53,48,33,8,21,21,13,27,18,17,29,11,24,44,1117,1027,72,28,23,8,31,11,24,21,14,17,29,19,29,31,1116,1043,57,50,0,46,4,42,9,41,158,343,372,323,12,0,0,990,74,32,54,0,1,49,0,12,40,7,55,17,23,85,1061,1000,64,36,50,0,3,47,0,20,35,5,56,16,24,83,1061,1096,37,33,38,31,53,227,388,356,206,35,0,0,0,0,0,746,81,26,53,46,23,49,43,26,54,43,30,79,41,95,1065,744,81,28,49,49,21,50,47,22,66,31,32,78,41,99,1062,801,53,70,40,67,44,65,42,65,195,330,311,381,33,3,0,566,74,67,56,53,51,48,51,47,52,45,54,58,66,84,1128,574,74,66,54,57,40,54,46,49,51,48,55,55,65,86,1126,663,114,101,83,85,88,304,444,419,187,12,0,0,0,0,0,615,48,69,33,58,23,33,64,16,31,66,28,37,63,72,1244,625,50,60,32,63,20,30,64,18,28,66,27,38,61,59,1259,652,73,59,56,48,54,48,61,50,229,390,450,260,70,0,0,1151,19,59,10,36,27,7,56,6,6,54,4,12,49,18,986,1158,15,58,9,51,14,6,55,5,6,56,3,7,53,7,997,1199,44,56,41,48,31,174,326,404,177,0,0,0,0,0,0,633,88,43,65,25,66,28,24,66,24,33,66,29,78,48,1184,676,53,72,32,28,69,21,30,65,23,31,64,27,77,47,1185,707,59,65,57,52,61,37,63,47,211,348,468,295,30,0,0,850,82,42,70,39,51,43,20,62,37,13,80,25,77,41,968,857,78,61,54,35,54,40,18,61,38,12,75,29,81,37,970,976,114,58,74,69,78,242,360,333,187,9,0,0,0,0,0},
 };
 
-
 		public static int[,] listOfFeatureVectorsEngGameTransition = {
 {147,192,169,1011,132,40,32,24,32,36,32,38,44,55,118,398,97,86,175,123,109,118,123,590,697,230,147,5,0,0,0,0,252,481,341,107,43,39,40,42,35,57,60,85,781,137,0,0,351,215,193,199,263,66,50,38,49,51,52,51,77,89,530,226,367,190,222,187,189,501,345,292,207,0,0,0,0,0,0,0,879,756,203,64,53,54,40,50,46,46,53,72,174,10,0,0,52,105,169,898,105,34,30,34,26,28,36,31,38,52,129,733,10,78,156,131,94,107,116,496,765,370,151,26,0,0,0,0,245,724,312,104,38,39,35,39,38,42,46,71,665,102,0,0,410,231,134,132,128,64,63,47,52,65,66,61,83,95,696,173,479,226,240,171,185,314,464,348,70,3,0,0,0,0,0,0,1043,909,192,70,58,37,26,28,19,27,28,25,35,3,0,0,67,122,200,626,162,52,38,27,55,19,39,49,44,62,150,788,0,92,185,133,134,112,136,416,643,389,221,39,0,0,0,0,247,882,350,71,58,26,33,66,24,57,45,77,459,105,0,0,169,98,163,172,181,48,64,40,49,53,63,57,101,159,770,313,159,182,182,162,338,492,469,379,126,11,0,0,0,0,0,0,934,849,235,54,40,30,27,43,36,36,40,72,67,37,0,0,102,203,208,777,141,53,41,42,44,53,37,46,64,54,108,527,84,129,207,159,149,100,130,542,532,295,171,2,0,0,0,0,328,637,368,130,58,47,39,32,42,28,40,79,596,76,0,0,304,243,198,202,468,57,50,45,49,34,58,48,49,103,384,208,329,161,229,190,223,342,316,305,404,1,0,0,0,0,0,0,772,646,172,78,48,78,55,46,65,36,74,104,283,43,0,0,74,200,164,582,96,34,33,46,29,37,42,32,47,58,173,853,57,129,166,153,107,102,99,349,697,475,162,4,0,0,0,0,321,948,347,89,55,45,41,36,18,26,28,60,416,70,0,0,191,199,251,198,96,62,48,67,52,60,76,85,71,134,560,350,258,244,213,218,341,420,398,369,39,0,0,0,0,0,0,0,1016,783,215,83,51,72,45,59,55,63,50,8,0,0,0,0,172,225,224,514,103,44,41,47,42,35,44,52,34,67,198,658,149,165,212,151,143,118,143,293,563,315,196,52,0,0,0,0,321,820,457,158,56,47,45,47,40,46,51,76,252,84,0,0,268,182,116,151,190,46,41,48,46,44,46,68,66,112,852,224,283,172,155,128,205,483,519,373,181,1,0,0,0,0,0,0,943,883,180,62,42,36,32,33,31,38,42,52,108,18,0,0},
 {0,10,84,119,143,113,91,79,84,82,90,98,147,737,613,10,10,124,133,136,106,109,80,227,294,257,124,52,58,207,566,17,208,137,187,402,333,125,51,42,42,34,36,46,56,86,513,202,0,31,161,135,146,108,111,69,97,80,85,120,175,467,703,12,28,296,199,133,145,339,368,203,29,30,25,41,43,224,392,5,359,207,409,493,159,34,26,32,25,26,25,37,37,48,485,98,0,0,14,88,148,104,92,74,72,92,89,94,165,565,872,31,0,27,153,144,117,81,101,327,525,345,142,38,38,69,389,4,119,177,217,769,433,119,29,24,32,21,21,40,28,56,332,83,0,16,183,201,123,91,89,79,72,79,92,106,163,555,635,16,71,344,161,117,131,244,503,266,24,15,18,37,29,80,438,22,418,201,467,562,117,22,22,23,25,15,20,30,32,37,350,159,0,0,20,116,94,130,100,55,81,88,64,113,154,388,1028,69,5,37,164,164,57,121,91,304,441,478,192,52,43,73,255,23,211,134,197,877,429,96,44,10,23,17,25,37,33,57,122,188,0,39,122,127,139,121,111,82,100,94,109,140,200,492,600,24,51,238,226,115,150,467,453,214,35,32,35,43,42,83,286,30,284,252,718,460,111,34,27,30,37,21,41,37,39,66,176,167,0,5,48,123,176,135,136,103,116,112,102,116,162,487,614,65,6,121,182,168,143,132,124,269,400,388,114,34,40,76,274,29,199,220,184,743,389,127,40,37,39,37,24,34,41,38,136,212,0,16,117,142,139,125,88,83,81,97,111,96,140,487,757,21,50,243,182,121,144,307,278,159,24,50,31,34,35,79,734,29,340,191,365,409,94,36,32,17,27,46,31,30,34,61,390,397,0,8,40,103,130,107,89,73,81,102,106,103,177,542,743,96,0,87,130,133,98,113,118,412,523,564,103,21,28,35,126,9,155,167,155,1047,406,176,61,27,30,40,19,17,21,26,40,113,3,60,123,162,162,117,115,84,104,104,102,174,227,622,340,1,47,348,163,153,165,443,490,208,45,45,27,54,36,84,192,0,306,284,529,669,133,29,26,45,39,44,30,37,46,77,178,28,0,2,48,160,170,153,112,104,79,115,108,131,189,453,599,77,10,128,211,172,120,115,144,416,471,387,138,35,32,34,79,8,240,240,199,833,472,171,62,29,26,25,27,19,26,35,49,47,0,23,121,131,121,84,93,80,61,94,100,104,185,664,638,1,26,266,141,111,110,229,572,238,34,33,31,48,36,79,532,14,297,187,384,631,107,34,34,21,33,34,32,33,41,61,341,230},
@@ -1348,7 +1202,300 @@ namespace CrashNSaneLoadDetector
 {46,176,287,1045,211,56,48,59,61,152,359,0,0,0,0,0,4,66,92,174,213,189,447,936,379,0,0,0,0,0,0,0,35,102,406,249,215,110,69,64,59,66,83,140,802,100,0,0,111,330,273,291,310,91,78,97,131,547,241,0,0,0,0,0,12,206,273,383,688,506,106,121,205,0,0,0,0,0,0,0,37,340,954,325,146,95,75,68,59,58,67,78,166,32,0,0,0,70,218,933,121,60,57,76,83,378,503,1,0,0,0,0,2,5,41,159,183,226,585,1077,222,0,0,0,0,0,0,0,29,115,539,443,209,75,48,53,47,52,55,72,686,77,0,0,110,375,251,167,186,114,97,94,157,765,184,0,0,0,0,0,39,332,339,271,510,781,119,70,39,0,0,0,0,0,0,0,132,326,1208,355,103,51,64,71,38,39,46,58,9,0,0,0,1,122,243,625,224,46,77,70,103,253,731,5,0,0,0,0,0,7,88,167,198,247,506,1092,195,0,0,0,0,0,0,0,20,145,698,465,156,107,48,42,69,39,83,62,476,90,0,0,94,152,187,192,239,65,115,91,167,980,218,0,0,0,0,0,5,178,246,260,810,679,133,110,79,0,0,0,0,0,0,0,26,500,1188,297,70,44,37,59,39,42,56,90,52,0,0,0,55,128,267,892,135,80,75,90,86,231,461,0,0,0,0,0,3,78,142,199,245,200,425,995,213,0,0,0,0,0,0,0,17,144,552,506,161,113,58,52,43,51,54,76,599,74,0,0,68,317,302,277,491,80,85,101,125,461,193,0,0,0,0,0,1,217,295,329,507,545,114,117,375,0,0,0,0,0,0,0,47,256,778,395,146,98,79,68,51,79,55,112,304,32,0,0,23,133,274,648,115,70,52,72,81,219,790,23,0,0,0,0,0,28,162,182,212,221,635,853,207,0,0,0,0,0,0,0,65,158,635,544,219,120,50,48,39,27,42,52,410,91,0,0,42,244,346,249,132,105,119,97,166,633,367,0,0,0,0,0,5,226,372,387,625,665,199,20,1,0,0,0,0,0,0,0,106,379,1254,248,103,83,71,79,87,64,25,1,0,0,0,0,43,216,308,562,109,79,72,80,105,251,667,8,0,0,0,0,1,118,124,176,249,240,617,699,273,3,0,0,0,0,0,0,61,148,596,558,274,102,74,54,68,62,73,79,300,51,0,0,146,197,196,170,254,102,90,103,149,871,222,0,0,0,0,0,0,196,333,250,614,713,190,69,135,0,0,0,0,0,0,0,109,326,1207,313,110,61,45,43,42,35,44,62,99,4,0,0},
 };
 
+		public static int[,] listOfFeatureVectorsTransition = {
+			{2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+			{ 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+
+		public static int numberOfBinsCorrect = 300;
+
+		#endregion Public Fields
+
+		#region Private Fields
+
+		private static float additiveVariance = 2.0f;
+
+		private static int numberOfBins = 16;
+
+		private static int patchSizeX = 50;
+
+		private static int patchSizeY = 50;
+
+		//used as a cutoff for when a match is detected correctly
+		private static float varianceOfBinsAllowed = 1.0f;
+
+		private static float varianceOfBinsAllowedMult = 1.45f;
+
+		#endregion Private Fields
+
+		#region Public Methods
+
+		public static bool compareFeatureVector(int[] newVector, int[,] comparison_vectors, out int matchingBins, float percentageOfBinsCorrectOverride = -1.0f, bool debugOutput = true)
+		{
+			//int[,] comparison_vectors = listOfFeatureVectorsEng;
+			int size = newVector.Length;
+
+			if (comparison_vectors.GetLength(1) < size)
+			{
+				size = comparison_vectors.GetLength(1);
+			}
+
+			//int number_of_bins_needed = 290;// (int) (size * percent_of_bins_correct);
+
+			int numVectors = comparison_vectors.GetLength(0);
+
+			matchingBins = 0;
+			for (int vectorIndex = 0; vectorIndex < numVectors; vectorIndex++)
+			{
+				int tempMatchingBins = 0;
+				//check if the current feature vector matches one of the stored ones closely enough
+				for (int bin = 0; bin < size; bin++)
+				{
+					//Determine upper/lower histogram ranges for matching bins
+					int lower_bound = (int)((comparison_vectors[vectorIndex, bin] / varianceOfBinsAllowedMult) - additiveVariance);
+					int upper_bound = (int)((comparison_vectors[vectorIndex, bin] * varianceOfBinsAllowedMult) + additiveVariance);
+
+					if (newVector[bin] <= upper_bound && newVector[bin] >= lower_bound)
+					{
+						tempMatchingBins++;
+					}
+
+					//If we can not get a possible match anymore, break for speed
+					if (((bin - tempMatchingBins) > (size - numberOfBinsCorrect)) && percentageOfBinsCorrectOverride < 0.0f)
+					{
+						break;
+					}
+				}
+				matchingBins = Math.Max(matchingBins, tempMatchingBins);
+
+				if (matchingBins >= numberOfBinsCorrect)
+				{
+					int a = 3;
+				}
+			}
+
+			if (debugOutput)
+			{
+				System.Console.WriteLine("Matching bins: " + matchingBins);
+			}
+
+			if (matchingBins >= numberOfBinsCorrect && percentageOfBinsCorrectOverride < 0.0f)
+			{
+				//if we found enough similarities, we found a match.
+				return true;
+			}
+
+			if (percentageOfBinsCorrectOverride >= 0.0f)
+			{
+				System.Console.WriteLine("Matching bins (percent): " + (matchingBins / (float)size));
+				System.Console.WriteLine("Required bins (percent): " + percentageOfBinsCorrectOverride);
+			}
+
+			if (percentageOfBinsCorrectOverride >= 0.0f && (matchingBins / (float)size) >= percentageOfBinsCorrectOverride)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public static bool isGameTransition(Bitmap capture, int black_level)
+		{
+			BitmapData bData = capture.LockBits(new Rectangle(0, 0, capture.Width, capture.Height), ImageLockMode.ReadWrite, capture.PixelFormat);
+			int bmpStride = bData.Stride;
+			int size = bData.Stride * bData.Height;
+
+			byte[] data = new byte[size];
+
+			/*This overload copies data of /size/ into /data/ from location specified (/Scan0/)*/
+			System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
+			int yAdd = 0;
+			int r = 0;
+			int g = 0;
+			int b = 0;
+			//we look at 50x50 patches and compute histogram bins for the a/r/g/b values.
+
+			int stride = 1; //spacing between feature pixels
 
 
+
+			for (int patchX = 0; patchX < (capture.Width / patchSizeX); patchX++)
+			{
+				for (int patchY = 0; patchY < (capture.Height / patchSizeY); patchY++)
+				{
+					int xStart = patchX * (patchSizeX * stride);
+					int yStart = patchY * (patchSizeX * stride);
+					int xEnd = (patchX + 1) * (patchSizeX * stride);
+					int yEnd = (patchY + 1) * (patchSizeY * stride);
+
+					for (int x_index = xStart; x_index < xEnd; x_index += stride)
+					{
+						for (int y_index = yStart; y_index < yEnd; y_index += stride)
+						{
+							yAdd = y_index * bmpStride;
+
+							//NOTE: while the pixel format is 32ARGB, reading byte-wise results in BGRA.
+							b += (int)(data[(x_index * 4) + (yAdd) + 0]);
+							g += (int)(data[(x_index * 4) + (yAdd) + 1]);
+							r += (int)(data[(x_index * 4) + (yAdd) + 2]);
+
+
+						}
+					}
+				}
+			}
+
+
+			capture.UnlockBits(bData);
+
+
+			b /= (capture.Width * capture.Height);
+			r /= (capture.Width * capture.Height);
+			g /= (capture.Width * capture.Height);
+
+
+			return (b < black_level && r < black_level && g < black_level);
+		}
+
+
+		public static bool compareFeatureVectorTransition(int[] newVector, int[,] comparison_vectors, out int matchingBins, float percentageOfBinsCorrectOverride = -1.0f, bool debugOutput = true)
+		{
+			//int[,] comparison_vectors = listOfFeatureVectorsEng;
+			int size = newVector.Length;
+
+			if (comparison_vectors.GetLength(1) < size)
+			{
+				size = comparison_vectors.GetLength(1);
+			}
+
+			//int number_of_bins_needed = 290;// (int) (size * percent_of_bins_correct);
+
+			int numVectors = comparison_vectors.GetLength(0);
+
+			// For the transitions, we want to check if the screen is black, that is the sum of the lowest 3 bins (color range from 0 - (256/numberOfBins) * 3 -> 0 - 48
+			// This should be robust enough unless people have got some serious issues with their black in their captures
+
+			matchingBins = 0;
+
+			int number_of_black_bins = 4;
+
+			int num_total_pixels_per_patch = patchSizeX * patchSizeY;
+
+			float percentage_correct = ((num_total_pixels_per_patch) * percentageOfBinsCorrectOverride);
+			int matching_patches = 0;
+			int total_patches = 0;
+			int similarity_additive_difference = 100;
+			// Iterate over each histogram
+			for (int bin = 0; bin < size; bin += (numberOfBins * 3))
+			{
+				int sum_red = 0;
+				int sum_green = 0;
+				int sum_blue = 0;
+				bool rgb_similarity = true;
+
+				for (int black_bin_offset = 0; black_bin_offset < number_of_black_bins; black_bin_offset++)
+				{
+					int r = newVector[bin + black_bin_offset];
+					int g = newVector[bin + numberOfBins + black_bin_offset];
+					int b = newVector[bin + 2 * numberOfBins + black_bin_offset];
+					sum_red += r;
+					sum_green += g;
+					sum_blue += b;
+
+					int min_rgb = Math.Min(b + similarity_additive_difference, Math.Min(r + similarity_additive_difference, g + similarity_additive_difference));
+					int max_rgb = Math.Max(b - similarity_additive_difference, Math.Max(r - similarity_additive_difference, g - similarity_additive_difference));
+
+					if ((r < min_rgb && r > max_rgb && g < min_rgb && g > max_rgb && b < min_rgb && b > max_rgb) == false)
+					{
+						rgb_similarity = false;
+					}
+
+				}
+
+				total_patches++;
+
+				// Check if the distribution matches, also check if all channels are similar in range
+				if (sum_red >= percentage_correct
+					&& sum_green >= percentage_correct
+					&& sum_blue >= percentage_correct
+					&& rgb_similarity == true
+					)
+				{
+					matching_patches++;
+				}
+			}
+
+			//Console.WriteLine("Matching {0}, Total {1}", matching_patches, total_patches);
+			if (matching_patches == total_patches)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public static List<int> featuresFromBitmap(Bitmap capture)
+		{
+			List<int> features = new List<int>();
+
+			BitmapData bData = capture.LockBits(new Rectangle(0, 0, capture.Width, capture.Height), ImageLockMode.ReadWrite, capture.PixelFormat);
+			int bmpStride = bData.Stride;
+			int size = bData.Stride * bData.Height;
+
+			byte[] data = new byte[size];
+
+			/*This overload copies data of /size/ into /data/ from location specified (/Scan0/)*/
+			System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
+			int yAdd = 0;
+			int r = 0;
+			int g = 0;
+			int b = 0;
+			//we look at 50x50 patches and compute histogram bins for the a/r/g/b values.
+
+			int stride = 1; //spacing between feature pixels
+
+			for (int patchX = 0; patchX < (capture.Width / patchSizeX); patchX++)
+			{
+				for (int patchY = 0; patchY < (capture.Height / patchSizeY); patchY++)
+				{
+					//int[] patch_hist_a = new int[numberOfBins];
+					int[] patchHistR = new int[numberOfBins];
+					int[] patchHistG = new int[numberOfBins];
+					int[] patchHistB = new int[numberOfBins];
+
+					int xStart = patchX * (patchSizeX * stride);
+					int yStart = patchY * (patchSizeX * stride);
+					int xEnd = (patchX + 1) * (patchSizeX * stride);
+					int yEnd = (patchY + 1) * (patchSizeY * stride);
+
+					for (int x_index = xStart; x_index < xEnd; x_index += stride)
+					{
+						for (int y_index = yStart; y_index < yEnd; y_index += stride)
+						{
+							yAdd = y_index * bmpStride;
+
+							//NOTE: while the pixel format is 32ARGB, reading byte-wise results in BGRA.
+							b = (int)(data[(x_index * 4) + (yAdd) + 0]);
+							g = (int)(data[(x_index * 4) + (yAdd) + 1]);
+							r = (int)(data[(x_index * 4) + (yAdd) + 2]);
+
+							patchHistR[(r * numberOfBins) / 256]++;
+							patchHistG[(g * numberOfBins) / 256]++;
+							patchHistB[(b * numberOfBins) / 256]++;
+						}
+					}
+
+					//enter the histograms as our features
+					features.AddRange(patchHistR);
+					features.AddRange(patchHistG);
+					features.AddRange(patchHistB);
+				}
+			}
+
+			capture.UnlockBits(bData);
+
+			return features;
+		}
+
+		#endregion Public Methods
 	}
 }

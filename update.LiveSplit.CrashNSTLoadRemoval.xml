@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <updates>
+	<update version="2.3">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Added option to detect transitions directly before and after load screens.
+				Only transitions up to 5 seconds are counted, possible longer black screens 
+				(e.g. when performing blind gate clip without a cutscene in between it and loading)
+				are simply ignored.
+			</change>
+		</changelog>
+	</update>
 	<update version="2.2">
 		<files>
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
