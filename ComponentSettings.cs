@@ -24,7 +24,8 @@ namespace LiveSplit.UI.Components
 
 		public bool AutoSplitterDisableOnSkipUntilSplit = false;
 
-		public bool RemoveTransitions = false;
+		public bool RemovePreTransitions = false;
+		public bool RemovePostTransitions = false;
 
 		//Number of frames to wait for a change from load -> running and vice versa.
 		public int AutoSplitterJitterToleranceFrames = 8;
@@ -370,8 +371,8 @@ namespace LiveSplit.UI.Components
 
 			settingsNode.AppendChild(ToElement(document, "AutoSplitEnabled", enableAutoSplitterChk.Checked));
 			settingsNode.AppendChild(ToElement(document, "AutoSplitDisableOnSkipUntilSplit", chkAutoSplitterDisableOnSkip.Checked));
-			settingsNode.AppendChild(ToElement(document, "RemoveTransitions", chkRemoveTransitions.Checked));
-
+			settingsNode.AppendChild(ToElement(document, "RemovePreTransitions", chkRemoveTransitions.Checked));
+			settingsNode.AppendChild(ToElement(document, "RemovePostTransitions", checkBox1.Checked));
 			var splitsNode = document.CreateElement("AutoSplitGames");
 
 			//Re-Add all other games/categories to the xml file
@@ -488,9 +489,14 @@ namespace LiveSplit.UI.Components
 					chkAutoSplitterDisableOnSkip.Checked = Convert.ToBoolean(element["AutoSplitDisableOnSkipUntilSplit"].InnerText);
 				}
 
-				if (element["RemoveTransitions"] != null)
+				if (element["RemovePreTransitions"] != null)
 				{
-					chkRemoveTransitions.Checked = Convert.ToBoolean(element["RemoveTransitions"].InnerText);
+					chkRemoveTransitions.Checked = Convert.ToBoolean(element["RemovePreTransitions"].InnerText);
+				}
+
+				if (element["RemovePostTransitions"] != null)
+				{
+					checkBox1.Checked = Convert.ToBoolean(element["RemovePostTransitions"].InnerText);
 				}
 
 				if (element["AutoSplitGames"] != null)
@@ -991,7 +997,12 @@ namespace LiveSplit.UI.Components
 
 		private void chkRemoveTransitions_CheckedChanged(object sender, EventArgs e)
 		{
-			RemoveTransitions = chkRemoveTransitions.Checked;
+			RemovePreTransitions = chkRemoveTransitions.Checked;
+		}
+
+		private void checkBox1_CheckedChanged(object sender, EventArgs e)
+		{
+			RemovePostTransitions = checkBox1.Checked;
 		}
 	}
 	public class AutoSplitData

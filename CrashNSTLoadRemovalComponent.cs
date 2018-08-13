@@ -176,8 +176,7 @@ namespace LiveSplit.UI.Components
 
 					timer.CurrentState.IsGameTimePaused = isLoading;
 
-					if (settings.RemoveTransitions)
-					{
+					
 						try
 						{
 							isTransition = FeatureDetector.compareFeatureVectorTransition(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, 0.8f, false);//FeatureDetector.isGameTransition(capture, 30);
@@ -211,7 +210,10 @@ namespace LiveSplit.UI.Components
 							}
 							else
 							{
-								timer.CurrentState.SetGameTime(timer.CurrentState.GameTimePauseTime - delta);
+								if (settings.RemovePreTransitions)
+								{
+									timer.CurrentState.SetGameTime(timer.CurrentState.GameTimePauseTime - delta);
+								}
 								Console.WriteLine("PRE-LOAD TRANSITION seconds: {0}", delta.TotalSeconds);
 							}
 
@@ -226,13 +228,16 @@ namespace LiveSplit.UI.Components
 						if (postLoadTransition == true && isTransition)
 						{
 							// We are transitioning after a load screen, this stops the timer, and actually increases the load time
-							timer.CurrentState.IsGameTimePaused = true;
+							if (settings.RemovePostTransitions)
+							{
+								timer.CurrentState.IsGameTimePaused = true;
+							}
 						}
 						else
 						{
 							postLoadTransition = false;
 						}
-					}
+					
 
 
 

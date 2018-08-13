@@ -54,6 +54,7 @@
 			this.autoSplitNameLbl = new System.Windows.Forms.Label();
 			this.autoSplitCategoryLbl = new System.Windows.Forms.Label();
 			this.enableAutoSplitterChk = new System.Windows.Forms.CheckBox();
+			this.checkBox1 = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.previewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.croppedPreviewPictureBox)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
@@ -271,6 +272,7 @@
 			// tabPage1
 			// 
 			this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+			this.tabPage1.Controls.Add(this.checkBox1);
 			this.tabPage1.Controls.Add(this.chkRemoveTransitions);
 			this.tabPage1.Controls.Add(this.panel1);
 			this.tabPage1.Controls.Add(this.lblVersion);
@@ -291,11 +293,11 @@
 			// chkRemoveTransitions
 			// 
 			this.chkRemoveTransitions.AutoSize = true;
-			this.chkRemoveTransitions.Location = new System.Drawing.Point(311, 87);
+			this.chkRemoveTransitions.Location = new System.Drawing.Point(147, 88);
 			this.chkRemoveTransitions.Name = "chkRemoveTransitions";
-			this.chkRemoveTransitions.Size = new System.Drawing.Size(120, 17);
+			this.chkRemoveTransitions.Size = new System.Drawing.Size(139, 17);
 			this.chkRemoveTransitions.TabIndex = 38;
-			this.chkRemoveTransitions.Text = "Remove Transitions";
+			this.chkRemoveTransitions.Text = "Remove Pre-Transitions";
 			this.chkRemoveTransitions.UseVisualStyleBackColor = true;
 			this.chkRemoveTransitions.CheckedChanged += new System.EventHandler(this.chkRemoveTransitions_CheckedChanged);
 			// 
@@ -382,6 +384,17 @@
 			this.enableAutoSplitterChk.UseVisualStyleBackColor = true;
 			this.enableAutoSplitterChk.CheckedChanged += new System.EventHandler(this.enableAutoSplitterChk_CheckedChanged);
 			// 
+			// checkBox1
+			// 
+			this.checkBox1.AutoSize = true;
+			this.checkBox1.Location = new System.Drawing.Point(292, 87);
+			this.checkBox1.Name = "checkBox1";
+			this.checkBox1.Size = new System.Drawing.Size(144, 17);
+			this.checkBox1.TabIndex = 39;
+			this.checkBox1.Text = "Remove Post-Transitions";
+			this.checkBox1.UseVisualStyleBackColor = true;
+			this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+			// 
 			// CrashNSTLoadRemovalSettings
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -432,5 +445,6 @@
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.CheckBox chkAutoSplitterDisableOnSkip;
 		private System.Windows.Forms.CheckBox chkRemoveTransitions;
+		private System.Windows.Forms.CheckBox checkBox1;
 	}
 }
