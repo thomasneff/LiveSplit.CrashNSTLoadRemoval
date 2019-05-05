@@ -24,10 +24,15 @@ namespace LiveSplit.UI.Components
 
 		public bool AutoSplitterDisableOnSkipUntilSplit = false;
 
-		public bool RemoveTransitions = false;
+		public bool RemoveFadeouts = false;
+    public bool RemoveFadeins = false;
 
-		//Number of frames to wait for a change from load -> running and vice versa.
-		public int AutoSplitterJitterToleranceFrames = 8;
+    public bool SaveDetectionLog = false;
+
+    public string DetectionLogFolderName = "CrashNSTLoadRemovalLog";
+
+    //Number of frames to wait for a change from load -> running and vice versa.
+    public int AutoSplitterJitterToleranceFrames = 8;
 
 		//If you split manually during "AutoSplitter" mode, I ignore AutoSplitter-splits for 50 frames. (A little less than 2 seconds)
 		//This means that if a split would happen during these frames, it is ignored.
@@ -101,6 +106,12 @@ namespace LiveSplit.UI.Components
 		{
 			InitializeComponent();
 
+      //RemoveFadeins = chkRemoveFadeIns.Checked;
+      
+      RemoveFadeouts = chkRemoveTransitions.Checked;
+      RemoveFadeins = chkRemoveTransitions.Checked;
+      SaveDetectionLog = chkSaveDetectionLog.Checked;
+
 			AllGameAutoSplitSettings = new Dictionary<string, XmlElement>();
 			dynamicAutoSplitterControls = new List<Control>();
 			CreateAutoSplitControls(state);
@@ -108,6 +119,7 @@ namespace LiveSplit.UI.Components
 			initImageCaptureInfo();
 			//processListComboBox.SelectedIndex = 0;
 			lblVersion.Text = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+
 
 			RefreshCaptureWindowList();
 			//processListComboBox.SelectedIndex = 0;
@@ -370,9 +382,11 @@ namespace LiveSplit.UI.Components
 
 			settingsNode.AppendChild(ToElement(document, "AutoSplitEnabled", enableAutoSplitterChk.Checked));
 			settingsNode.AppendChild(ToElement(document, "AutoSplitDisableOnSkipUntilSplit", chkAutoSplitterDisableOnSkip.Checked));
-			settingsNode.AppendChild(ToElement(document, "RemoveTransitions", chkRemoveTransitions.Checked));
+			settingsNode.AppendChild(ToElement(document, "RemoveFadeouts", chkRemoveTransitions.Checked));
+      //settingsNode.AppendChild(ToElement(document, "RemoveFadeins", chkRemoveFadeIns.Checked));
+      settingsNode.AppendChild(ToElement(document, "SaveDetectionLog", chkSaveDetectionLog.Checked));
 
-			var splitsNode = document.CreateElement("AutoSplitGames");
+      var splitsNode = document.CreateElement("AutoSplitGames");
 
 			//Re-Add all other games/categories to the xml file
 			foreach (var gameSettings in AllGameAutoSplitSettings)
@@ -488,12 +502,23 @@ namespace LiveSplit.UI.Components
 					chkAutoSplitterDisableOnSkip.Checked = Convert.ToBoolean(element["AutoSplitDisableOnSkipUntilSplit"].InnerText);
 				}
 
-				if (element["RemoveTransitions"] != null)
+				if (element["RemoveFadeouts"] != null)
 				{
-					chkRemoveTransitions.Checked = Convert.ToBoolean(element["RemoveTransitions"].InnerText);
+					chkRemoveTransitions.Checked = Convert.ToBoolean(element["RemoveFadeouts"].InnerText);
 				}
 
-				if (element["AutoSplitGames"] != null)
+        //if (element["RemoveFadeins"] != null)
+        //{
+        //  chkRemoveFadeIns.Checked = Convert.ToBoolean(element["RemoveFadeins"].InnerText);
+        //}
+        chkRemoveFadeIns.Checked = chkRemoveTransitions.Checked;
+
+        if (element["SaveDetectionLog"] != null)
+        {
+          chkSaveDetectionLog.Checked = Convert.ToBoolean(element["SaveDetectionLog"].InnerText);
+        }
+
+        if (element["AutoSplitGames"] != null)
 				{
 					var auto_split_element = element["AutoSplitGames"];
 
@@ -698,7 +723,8 @@ namespace LiveSplit.UI.Components
 
 				//Show matching bins for preview
 				var capture = CaptureImage();
-				var features = FeatureDetector.featuresFromBitmap(capture);
+        List<int> dummy;
+				var features = FeatureDetector.featuresFromBitmap(capture, out dummy);
 				int tempMatchingBins = 0;
 				var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, -1.0f, false);
 
@@ -818,7 +844,7 @@ namespace LiveSplit.UI.Components
 			}
 		}
 
-		private string removeInvalidXMLCharacters(string in_string)
+		public string removeInvalidXMLCharacters(string in_string)
 		{
 			if (in_string == null) return null;
 
@@ -991,10 +1017,22 @@ namespace LiveSplit.UI.Components
 
 		private void chkRemoveTransitions_CheckedChanged(object sender, EventArgs e)
 		{
-			RemoveTransitions = chkRemoveTransitions.Checked;
-		}
-	}
-	public class AutoSplitData
+			RemoveFadeouts = chkRemoveTransitions.Checked;
+      RemoveFadeins = chkRemoveTransitions.Checked;
+    }
+
+    private void chkSaveDetectionLog_CheckedChanged(object sender, EventArgs e)
+    {
+      SaveDetectionLog = chkSaveDetectionLog.Checked;
+    }
+
+    private void chkRemoveFadeIns_CheckedChanged(object sender, EventArgs e)
+    {
+      //RemoveFadeins = chkRemoveFadeIns.Checked;
+      RemoveFadeins = chkRemoveTransitions.Checked;
+    }
+  }
+  public class AutoSplitData
 	{
 		#region Public Fields
 

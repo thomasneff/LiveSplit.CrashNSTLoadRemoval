@@ -1357,7 +1357,7 @@ namespace CrashNSaneLoadDetector
 		}
 
 
-		public static bool compareFeatureVectorTransition(int[] newVector, int[,] comparison_vectors, out int matchingBins, float percentageOfBinsCorrectOverride = -1.0f, bool debugOutput = true)
+		public static bool compareFeatureVectorTransition(int[] newVector, int[,] comparison_vectors, List<int> max_per_patch, float max_transition_threshold, out float average_max_transition, out int matchingBins, float percentageOfBinsCorrectOverride = -1.0f, bool debugOutput = true)
 		{
 			//int[,] comparison_vectors = listOfFeatureVectorsEng;
 			int size = newVector.Length;
@@ -1378,7 +1378,58 @@ namespace CrashNSaneLoadDetector
 
 			int number_of_black_bins = 4;
 
-			int num_total_pixels_per_patch = patchSizeX * patchSizeY;
+      int black_level = (256 / numberOfBins) * 2;
+
+      if(max_transition_threshold > 0)
+      {
+        black_level = Convert.ToInt32(max_transition_threshold);
+      }
+
+      int max_max = 0;
+      average_max_transition = 0.0f;
+
+
+      int transition_tolerance = 1;
+
+
+      foreach (int max_val in max_per_patch)
+      {
+        max_max = Math.Max(max_val, max_max);
+        average_max_transition += max_val;
+      }
+
+      // Average of patch-max values for black level calibration
+      average_max_transition = average_max_transition / max_per_patch.Count;
+
+      // Baseline: If the *maximum* of all pixels is less than the tolerance, we can immediately decide that it is a transition.
+      if (max_max < transition_tolerance + 1)
+        return true;
+
+      //Console.WriteLine("Black Level {0}", max_max_transition);
+
+      // If we have a max_transition_threshold given from averaging, we can say that it is a transition if we are below the threshold with a given tolerance.
+      if(max_transition_threshold > 0 && average_max_transition <= (max_transition_threshold + transition_tolerance))
+      {
+        //Console.WriteLine("Detected max {0} > {1}, no transition!", max_max_transition, max_transition_threshold + transition_tolerance);
+        return true;
+      }
+      else
+      {
+        // Additional check in case the black level isn't calibrated yet
+        // Here we can only ensure if we are *not* in a transition because we're checking max values for each patch. 
+        foreach (int max_val in max_per_patch)
+        {
+          if (max_val > black_level)
+          {
+            //Console.WriteLine("Detected max {0} > {1}, no transition!", max_val, black_level);
+            return false;
+          }
+        }
+      }
+      
+
+      // Console.WriteLine("Detected max {0} <= {1}, might transition!", max_max, black_level);
+      int num_total_pixels_per_patch = patchSizeX * patchSizeY;
 
 			float percentage_correct = ((num_total_pixels_per_patch) * percentageOfBinsCorrectOverride);
 			int matching_patches = 0;
@@ -1424,7 +1475,7 @@ namespace CrashNSaneLoadDetector
 				}
 			}
 
-			//Console.WriteLine("Matching {0}, Total {1}", matching_patches, total_patches);
+			//Console.WriteLine("Transition: Matching {0}, Total {1}", matching_patches, total_patches);
 			if (matching_patches == total_patches)
 			{
 				return true;
@@ -1433,9 +1484,10 @@ namespace CrashNSaneLoadDetector
 			return false;
 		}
 
-		public static List<int> featuresFromBitmap(Bitmap capture)
+		public static List<int> featuresFromBitmap(Bitmap capture, out List<int> max_per_patch)
 		{
 			List<int> features = new List<int>();
+      max_per_patch = new List<int>();
 
 			BitmapData bData = capture.LockBits(new Rectangle(0, 0, capture.Width, capture.Height), ImageLockMode.ReadWrite, capture.PixelFormat);
 			int bmpStride = bData.Stride;
@@ -1467,6 +1519,10 @@ namespace CrashNSaneLoadDetector
 					int xEnd = (patchX + 1) * (patchSizeX * stride);
 					int yEnd = (patchY + 1) * (patchSizeY * stride);
 
+          int b_max = 0;
+          int g_max = 0;
+          int r_max = 0;
+
 					for (int x_index = xStart; x_index < xEnd; x_index += stride)
 					{
 						for (int y_index = yStart; y_index < yEnd; y_index += stride)
@@ -1477,6 +1533,9 @@ namespace CrashNSaneLoadDetector
 							b = (int)(data[(x_index * 4) + (yAdd) + 0]);
 							g = (int)(data[(x_index * 4) + (yAdd) + 1]);
 							r = (int)(data[(x_index * 4) + (yAdd) + 2]);
+              b_max = Math.Max(b, b_max);
+              g_max = Math.Max(g, g_max);
+              r_max = Math.Max(r, r_max);
 
 							patchHistR[(r * numberOfBins) / 256]++;
 							patchHistG[(g * numberOfBins) / 256]++;
@@ -1484,8 +1543,12 @@ namespace CrashNSaneLoadDetector
 						}
 					}
 
-					//enter the histograms as our features
-					features.AddRange(patchHistR);
+          max_per_patch.Add(b_max);
+          max_per_patch.Add(g_max);
+          max_per_patch.Add(r_max);
+
+          //enter the histograms as our features
+          features.AddRange(patchHistR);
 					features.AddRange(patchHistG);
 					features.AddRange(patchHistB);
 				}

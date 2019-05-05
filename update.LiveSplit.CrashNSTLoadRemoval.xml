@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <updates>
+  <update version="2.4">
+    <files>
+      <file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+    </files>
+    <changelog>
+      <change>
+        More accurate transition/fadeout detection. Now features an automatic black-level calibration for more accuracy in detecting black screens.
+      </change>
+    </changelog>
+  </update>
 	<update version="2.3">
 		<files>
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
