@@ -56,6 +56,7 @@
       this.autoSplitNameLbl = new System.Windows.Forms.Label();
       this.autoSplitCategoryLbl = new System.Windows.Forms.Label();
       this.enableAutoSplitterChk = new System.Windows.Forms.CheckBox();
+      this.lblBlackLevel = new System.Windows.Forms.Label();
       ((System.ComponentModel.ISupportInitialize)(this.previewPictureBox)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.croppedPreviewPictureBox)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
@@ -273,6 +274,7 @@
       // tabPage1
       // 
       this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+      this.tabPage1.Controls.Add(this.lblBlackLevel);
       this.tabPage1.Controls.Add(this.chkRemoveFadeIns);
       this.tabPage1.Controls.Add(this.chkSaveDetectionLog);
       this.tabPage1.Controls.Add(this.chkRemoveTransitions);
@@ -415,6 +417,15 @@
       this.enableAutoSplitterChk.UseVisualStyleBackColor = true;
       this.enableAutoSplitterChk.CheckedChanged += new System.EventHandler(this.enableAutoSplitterChk_CheckedChanged);
       // 
+      // lblBlackLevel
+      // 
+      this.lblBlackLevel.AutoSize = true;
+      this.lblBlackLevel.Location = new System.Drawing.Point(377, 90);
+      this.lblBlackLevel.Name = "lblBlackLevel";
+      this.lblBlackLevel.Size = new System.Drawing.Size(78, 13);
+      this.lblBlackLevel.TabIndex = 41;
+      this.lblBlackLevel.Text = "Black-Level: -1";
+      // 
       // CrashNSTLoadRemovalSettings
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -467,5 +478,6 @@
 		private System.Windows.Forms.CheckBox chkRemoveTransitions;
     private System.Windows.Forms.CheckBox chkSaveDetectionLog;
     private System.Windows.Forms.CheckBox chkRemoveFadeIns;
+    private System.Windows.Forms.Label lblBlackLevel;
   }
 }

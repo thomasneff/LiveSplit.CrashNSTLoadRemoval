@@ -29,6 +29,8 @@ namespace LiveSplit.UI.Components
 
     public bool SaveDetectionLog = false;
 
+    public int AverageBlackLevel = -1;
+
     public string DetectionLogFolderName = "CrashNSTLoadRemovalLog";
 
     //Number of frames to wait for a change from load -> running and vice versa.
@@ -129,6 +131,12 @@ namespace LiveSplit.UI.Components
 		#endregion Public Constructors
 
 		#region Public Methods
+
+    public void SetBlackLevel(int black_level)
+    {
+      AverageBlackLevel = black_level;
+      lblBlackLevel.Text = "Black-Level: " + AverageBlackLevel;
+    }
 
 		public Bitmap CaptureImage()
 		{

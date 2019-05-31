@@ -254,6 +254,7 @@ namespace LiveSplit.UI.Components
               max_transition_max_level = Math.Max(last_transition_max_level, max_transition_max_level);
               Console.WriteLine("pre-load black-level: Average transition {5}: num: {0}, sum: {1}, last: {2}, avg: {3}, max: {4}", num_transitions, sum_transitions_max_level, last_transition_max_level, average_transition_max_level, max_transition_max_level, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
               last_transition_max_level = 0.0f;
+              settings.SetBlackLevel(Convert.ToInt32(average_transition_max_level));
             }
 
             if (wasTransition && isLoading)
@@ -301,6 +302,7 @@ namespace LiveSplit.UI.Components
                   Console.WriteLine("post-load black-level: Average transition {5}: num: {0}, sum: {1}, last: {2}, avg: {3}, max: {4}", num_transitions, sum_transitions_max_level, last_transition_max_level, average_transition_max_level, max_transition_max_level, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
                   last_transition_max_level = 0.0f;
                   first_frame_post_load_transition = true;
+                  settings.SetBlackLevel(Convert.ToInt32(average_transition_max_level));
                 }
 
               }
@@ -559,8 +561,8 @@ namespace LiveSplit.UI.Components
       log_file_stream = new FileStream(fileName, FileMode.Create);
       log_file_writer = new StreamWriter(log_file_stream);
       log_file_writer.AutoFlush = true;
-      //Console.SetOut(log_file_writer);
-      //Console.SetError(log_file_writer);
+      Console.SetOut(log_file_writer);
+      Console.SetError(log_file_writer);
 
     }
 
