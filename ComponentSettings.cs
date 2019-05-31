@@ -724,7 +724,8 @@ namespace LiveSplit.UI.Components
 				//Show matching bins for preview
 				var capture = CaptureImage();
         List<int> dummy;
-				var features = FeatureDetector.featuresFromBitmap(capture, out dummy);
+        int black_level = 0;
+				var features = FeatureDetector.featuresFromBitmap(capture, out dummy, out black_level);
 				int tempMatchingBins = 0;
 				var isLoading = FeatureDetector.compareFeatureVector(features.ToArray(), FeatureDetector.listOfFeatureVectorsEng, out tempMatchingBins, -1.0f, false);
 

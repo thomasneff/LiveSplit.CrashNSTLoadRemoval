@@ -57,7 +57,7 @@ namespace LiveSplit.UI.Components
     private int NumberOfSplits = 0;
     private float average_transition_max_level = 0.0f;
     private int num_transitions = 0;
-    private int num_transitions_for_calibration = 4; // How many pre-load screens are necessary to calibrate to the correct black level
+    private int num_transitions_for_calibration = 2; // How many pre-load screens are necessary to calibrate to the correct black level
     private float sum_transitions_max_level = 0.0f;
     private float last_transition_max_level = 0.0f;
     private float max_transition_max_level = 0.0f;
@@ -166,7 +166,8 @@ namespace LiveSplit.UI.Components
           Bitmap capture = settings.CaptureImage();
           List<int> max_per_patch;
           //Feed the image to the feature detection
-          var features = FeatureDetector.featuresFromBitmap(capture, out max_per_patch);
+          int black_level = 0;
+          var features = FeatureDetector.featuresFromBitmap(capture, out max_per_patch, out black_level);
           int tempMatchingBins = 0;
           bool wasLoading = isLoading;
           bool wasTransition = isTransition;
@@ -183,6 +184,17 @@ namespace LiveSplit.UI.Components
             Console.WriteLine("Error: " + ex.ToString());
             throw ex;
           }
+
+
+         /* if (isLoading && num_transitions < num_transitions_for_calibration)
+          {
+            num_transitions++;
+            sum_transitions_max_level += black_level;
+            average_transition_max_level = sum_transitions_max_level / num_transitions;
+            max_transition_max_level = Math.Max(black_level, max_transition_max_level);
+            Console.WriteLine("pre-load black-level: Average transition {5}: num: {0}, sum: {1}, last: {2}, avg: {3}, max: {4}", num_transitions, sum_transitions_max_level, last_transition_max_level, average_transition_max_level, max_transition_max_level, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
+            last_transition_max_level = 0.0f;
+          }*/
 
 
           matchingBins = tempMatchingBins;
@@ -225,13 +237,23 @@ namespace LiveSplit.UI.Components
 
             //Console.WriteLine("GAMETIMEPAUSETIME: {0}", timer.CurrentState.GameTimePauseTime);
 
-            if (isTransition)
+            if (!isLoading)
             {
               last_transition_max_level = new_avg_transition_max;
             }
             else if(settings.RemoveFadeins)
             {
               first_frame_post_load_transition = false;
+            }
+
+            if(!wasLoading && isLoading)
+            {
+              num_transitions++;
+              sum_transitions_max_level += last_transition_max_level;
+              average_transition_max_level = sum_transitions_max_level / num_transitions;
+              max_transition_max_level = Math.Max(last_transition_max_level, max_transition_max_level);
+              Console.WriteLine("pre-load black-level: Average transition {5}: num: {0}, sum: {1}, last: {2}, avg: {3}, max: {4}", num_transitions, sum_transitions_max_level, last_transition_max_level, average_transition_max_level, max_transition_max_level, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
+              last_transition_max_level = 0.0f;
             }
 
             if (wasTransition && isLoading)
@@ -253,12 +275,6 @@ namespace LiveSplit.UI.Components
                   Console.WriteLine("PRE-LOAD TRANSITION {2} seconds: {0}, totalPausedTime: {1}", delta.TotalSeconds, total_paused_time, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
                 }
 
-                num_transitions++;
-                sum_transitions_max_level += last_transition_max_level;
-                average_transition_max_level = sum_transitions_max_level / num_transitions;
-                max_transition_max_level = Math.Max(last_transition_max_level, max_transition_max_level);
-                Console.WriteLine("pre-load black-level: Average transition {5}: num: {0}, sum: {1}, last: {2}, avg: {3}, max: {4}", num_transitions, sum_transitions_max_level, last_transition_max_level, average_transition_max_level, max_transition_max_level, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
-                last_transition_max_level = 0.0f;
               }
               
             }
@@ -273,12 +289,10 @@ namespace LiveSplit.UI.Components
                 Console.WriteLine("POST-LOAD TRANSITION {2} seconds: {0}, totalPausedTime: {1}", delta.TotalSeconds, total_paused_time, SplitNames[Math.Max(Math.Min(liveSplitState.CurrentSplitIndex, SplitNames.Count - 1), 0)]);
               }
 
-              if (postLoadTransition == true && isTransition)
+              if(wasLoading && !isLoading && isTransition)
               {
-                // We are transitioning after a load screen, this stops the timer, and actually increases the load time
-                timer.CurrentState.IsGameTimePaused = true;
 
-                if (first_frame_post_load_transition == false)
+               if (first_frame_post_load_transition == false)
                 {
                   num_transitions++;
                   sum_transitions_max_level += last_transition_max_level;
@@ -288,6 +302,13 @@ namespace LiveSplit.UI.Components
                   last_transition_max_level = 0.0f;
                   first_frame_post_load_transition = true;
                 }
+
+              }
+
+              if (postLoadTransition == true && isTransition)
+              {
+                // We are transitioning after a load screen, this stops the timer, and actually increases the load time
+                timer.CurrentState.IsGameTimePaused = true;
 
 
               }
@@ -538,8 +559,8 @@ namespace LiveSplit.UI.Components
       log_file_stream = new FileStream(fileName, FileMode.Create);
       log_file_writer = new StreamWriter(log_file_stream);
       log_file_writer.AutoFlush = true;
-      Console.SetOut(log_file_writer);
-      Console.SetError(log_file_writer);
+      //Console.SetOut(log_file_writer);
+      //Console.SetError(log_file_writer);
 
     }
 

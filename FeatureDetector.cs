@@ -1389,7 +1389,7 @@ namespace CrashNSaneLoadDetector
       average_max_transition = 0.0f;
 
 
-      int transition_tolerance = 1;
+      int transition_tolerance = 2;
 
 
       foreach (int max_val in max_per_patch)
@@ -1402,7 +1402,7 @@ namespace CrashNSaneLoadDetector
       average_max_transition = average_max_transition / max_per_patch.Count;
 
       // Baseline: If the *maximum* of all pixels is less than the tolerance, we can immediately decide that it is a transition.
-      if (max_max < transition_tolerance + 1)
+      if (max_max < transition_tolerance + 2)
         return true;
 
       //Console.WriteLine("Black Level {0}", max_max_transition);
@@ -1481,14 +1481,24 @@ namespace CrashNSaneLoadDetector
 				return true;
 			}
 
-			return false;
+
+      // Finally, only if we haven't calibrated yet, we check the patch max for a conservative detection
+
+      if(max_transition_threshold < 0)
+      {
+        if (max_max < (black_level + 1))
+          return true;
+      }
+
+
+      return false;
 		}
 
-		public static List<int> featuresFromBitmap(Bitmap capture, out List<int> max_per_patch)
+		public static List<int> featuresFromBitmap(Bitmap capture, out List<int> max_per_patch, out int black_level)
 		{
 			List<int> features = new List<int>();
       max_per_patch = new List<int>();
-
+      black_level = 255;
 			BitmapData bData = capture.LockBits(new Rectangle(0, 0, capture.Width, capture.Height), ImageLockMode.ReadWrite, capture.PixelFormat);
 			int bmpStride = bData.Stride;
 			int size = bData.Stride * bData.Height;
@@ -1533,6 +1543,10 @@ namespace CrashNSaneLoadDetector
 							b = (int)(data[(x_index * 4) + (yAdd) + 0]);
 							g = (int)(data[(x_index * 4) + (yAdd) + 1]);
 							r = (int)(data[(x_index * 4) + (yAdd) + 2]);
+
+              black_level = Math.Min(black_level, (r + g + b) / 3);
+
+
               b_max = Math.Max(b, b_max);
               g_max = Math.Max(g, g_max);
               r_max = Math.Max(r, r_max);
