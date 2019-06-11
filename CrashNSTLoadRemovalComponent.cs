@@ -474,17 +474,15 @@ namespace LiveSplit.UI.Components
 
       if (log_file_writer != null)
       {
-        log_file_writer.Close();
-        log_file_writer.Dispose();
+        if (log_file_writer.BaseStream != null)
+        {
+          log_file_writer.Flush();
+          log_file_writer.Close();
+          log_file_writer.Dispose();
+        }
         log_file_writer = null;
       }
 
-      if (log_file_stream != null)
-      {
-        log_file_stream.Close();
-        log_file_stream.Dispose();
-        log_file_stream = null;
-      }
     }
 
     void timer_OnStart(object sender, EventArgs e)
@@ -542,21 +540,18 @@ namespace LiveSplit.UI.Components
       System.IO.Directory.CreateDirectory(settings.DetectionLogFolderName);
 
       string fileName = Path.Combine(settings.DetectionLogFolderName + "/", "CrashNSTLoadRemoval_Log_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_") + settings.removeInvalidXMLCharacters(GameName) + "_" + settings.removeInvalidXMLCharacters(GameCategory) + ".txt");
-      if (log_file_stream != null)
-      {
-        log_file_stream.Flush();
-        log_file_stream.Close();
-        log_file_stream.Dispose();
-        log_file_stream = null;
-      }
 
       if (log_file_writer != null)
       {
-        log_file_writer.Flush();
-        log_file_writer.Close();
-        log_file_writer.Dispose();
+        if (log_file_writer.BaseStream != null)
+        {
+          log_file_writer.Flush();
+          log_file_writer.Close();
+          log_file_writer.Dispose();
+        }
         log_file_writer = null;
       }
+
 
       log_file_stream = new FileStream(fileName, FileMode.Create);
       log_file_writer = new StreamWriter(log_file_stream);
@@ -687,18 +682,16 @@ namespace LiveSplit.UI.Components
     public void Dispose()
     {
       timer.CurrentState.OnStart -= timer_OnStart;
+
       if (log_file_writer != null)
       {
-        log_file_writer.Close();
-        log_file_writer.Dispose();
+        if (log_file_writer.BaseStream != null)
+        {
+          log_file_writer.Flush();
+          log_file_writer.Close();
+          log_file_writer.Dispose();
+        }
         log_file_writer = null;
-      }
-
-      if (log_file_stream != null)
-      {
-        log_file_stream.Close();
-        log_file_stream.Dispose();
-        log_file_stream = null;
       }
 
     }
