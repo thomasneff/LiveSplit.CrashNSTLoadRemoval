@@ -27,6 +27,9 @@ I decided to go for this simplistic approach (rather than e.g. computing SIFT fe
 # Missing Features
 If you do full trilogy run, you'll still need to time your title screen loads. Sorry, that's just because the title screen loads are different than the ingame loads. I might tinker around with also detecting those, but since there are so few of them, I'm not sure if that would be worth it.
 
+# Known Issues
+If you want to use the AutoSplitter functionality, **all your Splits need to have different names!**. If you have Splits that share the same name, the AutoSplitter is not able to differentiate between them.
+
 # Settings
 The LiveSplit.CrashNSTLoadRemoval.dll goes into your "Components" folder in your LiveSplit folder.
 
