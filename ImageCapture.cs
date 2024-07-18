@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 namespace CrashNSaneLoadDetector
 {
+	/*
 	public struct ImageCaptureInfo
 	{
 		public float featureVectorResolutionX;
@@ -29,7 +30,7 @@ namespace CrashNSaneLoadDetector
 		public float crop_coordinate_right;
 		public float crop_coordinate_top;
 		public float crop_coordinate_bottom;
-	}
+	}*/
 
 
 	//This class contains utilities for capturing from the screen / from a given window.
