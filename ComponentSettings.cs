@@ -42,6 +42,8 @@ namespace LiveSplit.UI.Components
         //This means that if a split would happen during these frames, it is ignored.
         public int AutoSplitterManualSplitDelayFrames = 50;
 
+        public bool PluginDisabled = false;
+
         #endregion Public Fields
 
         #region Private Fields
@@ -1167,6 +1169,7 @@ namespace LiveSplit.UI.Components
 
         private void upDownBlackLevel_ValueChanged(object sender, EventArgs e)
         {
+
             SetBlackLevelFromCode((int)upDownBlackLevel.Value);
         }
 
@@ -1189,12 +1192,18 @@ namespace LiveSplit.UI.Components
 
         private void chkWGCEnabled_CheckedChanged(object sender, EventArgs e)
         {
+
             WGCEnabled = chkWGCEnabled.Checked;
 
             // We stop the capture, and start it in the draw preview / capture image methods if necessary.
             WGCCaptureSample.StopCapture();
 
             DrawPreview();
+        }
+
+        private void chkDisablePlugin_CheckedChanged(object sender, EventArgs e)
+        {
+            PluginDisabled = chkDisablePlugin.Checked;
         }
     }
     public class AutoSplitData

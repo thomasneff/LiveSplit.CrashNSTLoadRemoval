@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <updates>
+	<update version="2.7">
+		<files>
+			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />
+			<file path="Components/CaptureSampleCore.dll" status="changed" />
+			<file path="Components/Composition.WindowsRuntimeHelpers.dll" status="changed" />
+			<file path="Components/SharpDX.Direct3D11.dll" status="changed" />
+			<file path="Components/SharpDX.Direct3D11.xml" status="changed" />
+			<file path="Components/SharpDX.dll" status="changed" />
+			<file path="Components/SharpDX.DXGI.dll" status="changed" />
+			<file path="Components/SharpDX.DXGI.xml" status="changed" />
+			<file path="Components/System.Drawing.Common.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>
+				Add back disable plugin option.
+			</change>
+		</changelog>
+	</update>
 	<update version="2.6">
 		<files>
 			<file path="Components/LiveSplit.CrashNSTLoadRemoval.dll" status="changed" />

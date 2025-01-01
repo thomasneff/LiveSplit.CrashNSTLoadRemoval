@@ -62,6 +62,8 @@
             this.autoSplitNameLbl = new System.Windows.Forms.Label();
             this.autoSplitCategoryLbl = new System.Windows.Forms.Label();
             this.enableAutoSplitterChk = new System.Windows.Forms.CheckBox();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.chkDisablePlugin = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.previewPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.croppedPreviewPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
@@ -72,6 +74,7 @@
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.upDownBlackLevel)).BeginInit();
             this.tabPage2.SuspendLayout();
+            this.tabPage3.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblVersion
@@ -290,6 +293,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Margin = new System.Windows.Forms.Padding(4);
             this.tabControl1.Name = "tabControl1";
@@ -527,6 +531,30 @@
             this.enableAutoSplitterChk.UseVisualStyleBackColor = true;
             this.enableAutoSplitterChk.CheckedChanged += new System.EventHandler(this.enableAutoSplitterChk_CheckedChanged);
             // 
+            // tabPage3
+            // 
+            this.tabPage3.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage3.Controls.Add(this.chkDisablePlugin);
+            this.tabPage3.Location = new System.Drawing.Point(4, 25);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(627, 626);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "Dangerous Settings";
+            // 
+            // chkDisablePlugin
+            // 
+            this.chkDisablePlugin.AutoSize = true;
+            this.chkDisablePlugin.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.chkDisablePlugin.ForeColor = System.Drawing.Color.Red;
+            this.chkDisablePlugin.Location = new System.Drawing.Point(9, 4);
+            this.chkDisablePlugin.Margin = new System.Windows.Forms.Padding(4);
+            this.chkDisablePlugin.Name = "chkDisablePlugin";
+            this.chkDisablePlugin.Size = new System.Drawing.Size(172, 29);
+            this.chkDisablePlugin.TabIndex = 1;
+            this.chkDisablePlugin.Text = "Disable Plugin";
+            this.chkDisablePlugin.UseVisualStyleBackColor = true;
+            this.chkDisablePlugin.CheckedChanged += new System.EventHandler(this.chkDisablePlugin_CheckedChanged);
+            // 
             // CrashNSTLoadRemovalSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -550,6 +578,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.upDownBlackLevel)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            this.tabPage3.ResumeLayout(false);
+            this.tabPage3.PerformLayout();
             this.ResumeLayout(false);
 
 		}
@@ -589,5 +619,7 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.CheckBox chkAutoBlackLevel;
         private System.Windows.Forms.CheckBox chkWGCEnabled;
+        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.CheckBox chkDisablePlugin;
     }
 }
